@@ -1,0 +1,1043 @@
+{
+  "analyze": {
+    "initialQuery": null,
+    "queryLoadingStatus": {},
+    "errors": {},
+    "isLoading": {},
+    "isShowingMapSpinner": false
+  },
+  "app": {
+    "isShowingTopNav": false,
+    "isShowingSideNav": false,
+    "languageIsoCode": null
+  },
+  "articles": {
+    "articles": [],
+    "isError": false,
+    "isLoading": false
+  },
+  "availableCities": {
+    "data": [
+      {
+        "cityName": "Amsterdam",
+        "slug": "amsterdam",
+        "timeZone": "Europe/Amsterdam",
+        "cityId": 34,
+        "lat": 52.3702157,
+        "lng": 4.8951679,
+        "countryName": "Netherlands",
+        "metadataId": "101",
+        "region": "EMEA - NEE",
+        "megaRegion": "EMEA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Atlanta",
+        "slug": "atlanta",
+        "timeZone": "America/New_York",
+        "cityId": 23,
+        "lat": 33.7489,
+        "lng": -84.3881,
+        "countryName": "United States",
+        "metadataId": "115",
+        "region": "US East",
+        "megaRegion": "US \u0026 Canada",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Auckland",
+        "slug": "auckland",
+        "timeZone": "Pacific/Auckland",
+        "cityId": 131,
+        "lat": -36.8485,
+        "lng": 174.7633,
+        "countryName": "New Zealand",
+        "metadataId": "113",
+        "region": "APACX - ANZ",
+        "megaRegion": "APACX",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Bangalore",
+        "slug": "bangalore",
+        "timeZone": "Asia/Kolkata",
+        "cityId": 130,
+        "lat": 12.9716,
+        "lng": 77.5946,
+        "countryName": "India",
+        "metadataId": "105",
+        "region": "India SA - South",
+        "megaRegion": "India SA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Barcelona",
+        "slug": "barcelona",
+        "timeZone": "Europe/Madrid",
+        "cityId": 230,
+        "lat": 41.3851,
+        "lng": 2.1734,
+        "countryName": "Spain",
+        "metadataId": "271",
+        "region": "EMEA - WSE",
+        "megaRegion": "EMEA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "Speeds"
+        ]
+      },
+      {
+        "cityName": "Berlin",
+        "slug": "berlin",
+        "timeZone": "Europe/Berlin",
+        "cityId": 38,
+        "lat": 52.519171,
+        "lng": 13.4060912,
+        "countryName": "Germany",
+        "metadataId": "223",
+        "region": "EMEA - WSE",
+        "megaRegion": "EMEA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "Speeds"
+        ]
+      },
+      {
+        "cityName": "Bogotá",
+        "slug": "bogota",
+        "timeZone": "America/Bogota",
+        "cityId": 146,
+        "lat": 4.598056,
+        "lng": -74.075833,
+        "countryName": "Colombia",
+        "metadataId": "17",
+        "region": "LatAm - ACAC",
+        "megaRegion": "LatAm",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Boston",
+        "slug": "boston",
+        "timeZone": "America/New_York",
+        "cityId": 6,
+        "lat": 42.3584308,
+        "lng": -71.0597732,
+        "countryName": "United States",
+        "metadataId": "5",
+        "region": "US East",
+        "megaRegion": "US \u0026 Canada",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Brisbane",
+        "slug": "brisbane",
+        "timeZone": "Australia/Brisbane",
+        "cityId": 221,
+        "lat": -27.471,
+        "lng": 153.0234,
+        "countryName": "Australia",
+        "metadataId": "19",
+        "region": "APACX - ANZ",
+        "megaRegion": "APACX",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Bristol",
+        "slug": "bristol",
+        "timeZone": "Europe/London",
+        "cityId": 608,
+        "lat": 51.4578399658,
+        "lng": -2.5837431993,
+        "countryName": "United Kingdom",
+        "metadataId": "181",
+        "region": "EMEA - NEE",
+        "megaRegion": "EMEA",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Brussels",
+        "slug": "brussels",
+        "timeZone": "Europe/Brussels",
+        "cityId": 37,
+        "lat": 50.8503,
+        "lng": 4.3517,
+        "countryName": "Belgium",
+        "metadataId": "127",
+        "region": "EMEA - NEE",
+        "megaRegion": "EMEA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes",
+          "MobilityHeatmap"
+        ]
+      },
+      {
+        "cityName": "Buenos Aires",
+        "slug": "buenos_aires",
+        "timeZone": "America/Argentina/Buenos_Aires",
+        "cityId": 805,
+        "lat": -34.602556,
+        "lng": -58.410653,
+        "countryName": "Argentina",
+        "metadataId": "145",
+        "region": "LatAm - South Cone",
+        "megaRegion": "LatAm",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Cairo",
+        "slug": "cairo",
+        "timeZone": "Africa/Cairo",
+        "cityId": 531,
+        "lat": 30.0444,
+        "lng": 31.2357,
+        "countryName": "Egypt",
+        "metadataId": "43",
+        "region": "EMEA - MEA",
+        "megaRegion": "EMEA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Cape Town",
+        "slug": "cape_town",
+        "timeZone": "Africa/Johannesburg",
+        "cityId": 137,
+        "lat": -33.9249,
+        "lng": 18.4241,
+        "countryName": "South Africa",
+        "metadataId": "111",
+        "region": "EMEA - MEA",
+        "megaRegion": "EMEA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Cincinnati",
+        "slug": "cincinnati",
+        "timeZone": "America/New_York",
+        "cityId": 141,
+        "lat": 39.104166,
+        "lng": -84.518997,
+        "countryName": "United States",
+        "metadataId": "75",
+        "region": "US Central \u0026 Canada",
+        "megaRegion": "US \u0026 Canada",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes",
+          "Speeds"
+        ]
+      },
+      {
+        "cityName": "Dallas",
+        "slug": "dallas",
+        "timeZone": "America/Chicago",
+        "cityId": 25,
+        "lat": 32.777313,
+        "lng": -96.800136,
+        "countryName": "United States",
+        "metadataId": "161",
+        "region": "US Central \u0026 Canada",
+        "megaRegion": "US \u0026 Canada",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Guadalajara",
+        "slug": "guadalajara",
+        "timeZone": "America/Mexico_City",
+        "cityId": 204,
+        "lat": 20.674,
+        "lng": -103.343803,
+        "countryName": "Mexico",
+        "metadataId": "129",
+        "region": "LatAm - Mexico",
+        "megaRegion": "LatAm",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Hyderabad",
+        "slug": "hyderabad",
+        "timeZone": "Asia/Kolkata",
+        "cityId": 203,
+        "lat": 17.385,
+        "lng": 78.4867,
+        "countryName": "India",
+        "metadataId": "63",
+        "region": "India SA - South",
+        "megaRegion": "India SA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Johannesburg and Pretoria",
+        "slug": "johannesburg",
+        "timeZone": "Africa/Johannesburg",
+        "cityId": 135,
+        "lat": -26.2041,
+        "lng": 28.0473,
+        "countryName": "South Africa",
+        "metadataId": "25",
+        "region": "EMEA - MEA",
+        "megaRegion": "EMEA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Kolkata",
+        "slug": "kolkata",
+        "timeZone": "Asia/Kolkata",
+        "cityId": 476,
+        "lat": 22.5726,
+        "lng": 88.3639,
+        "countryName": "India",
+        "metadataId": "153",
+        "region": "India SA - East",
+        "megaRegion": "India SA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Kyiv",
+        "slug": "kyiv",
+        "timeZone": "Europe/Kiev",
+        "cityId": 943,
+        "lat": 50.4106,
+        "lng": 30.609,
+        "countryName": "Ukraine",
+        "metadataId": "221",
+        "region": "EMEA - NEE",
+        "megaRegion": "EMEA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "Speeds"
+        ]
+      },
+      {
+        "cityName": "Leeds",
+        "slug": "leeds",
+        "timeZone": "Europe/London",
+        "cityId": 245,
+        "lat": 53.8008,
+        "lng": -1.5491,
+        "countryName": "United Kingdom",
+        "metadataId": "139",
+        "region": "EMEA - NEE",
+        "megaRegion": "EMEA",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Lisbon",
+        "slug": "lisbon",
+        "timeZone": "Europe/Lisbon",
+        "cityId": 52,
+        "lat": 38.713811,
+        "lng": -9.139386,
+        "countryName": "Portugal",
+        "metadataId": "37",
+        "region": "EMEA - WSE",
+        "megaRegion": "EMEA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "MobilityHeatmap"
+        ]
+      },
+      {
+        "cityName": "London",
+        "slug": "london",
+        "timeZone": "Europe/London",
+        "cityId": 18,
+        "lat": 51.51262,
+        "lng": -0.130438,
+        "countryName": "United Kingdom",
+        "metadataId": "11",
+        "region": "EMEA - NEE",
+        "megaRegion": "EMEA",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes",
+          "Speeds",
+          "MobilityHeatmap"
+        ]
+      },
+      {
+        "cityName": "Los Angeles",
+        "slug": "los_angeles",
+        "timeZone": "America/Los_Angeles",
+        "cityId": 12,
+        "lat": 34.0522342,
+        "lng": -118.2436849,
+        "countryName": "United States",
+        "metadataId": "49",
+        "region": "US West",
+        "megaRegion": "US \u0026 Canada",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Madrid",
+        "slug": "madrid",
+        "timeZone": "Europe/Madrid",
+        "cityId": 16,
+        "lat": 40.4166909,
+        "lng": -3.7003454,
+        "countryName": "Spain",
+        "metadataId": "231",
+        "region": "EMEA - WSE",
+        "megaRegion": "EMEA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes",
+          "Speeds",
+          "MobilityHeatmap"
+        ]
+      },
+      {
+        "cityName": "Manchester",
+        "slug": "manchester",
+        "timeZone": "Europe/London",
+        "cityId": 211,
+        "lat": 53.4793,
+        "lng": -2.2485,
+        "countryName": "United Kingdom",
+        "metadataId": "107",
+        "region": "EMEA - NEE",
+        "megaRegion": "EMEA",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Melbourne",
+        "slug": "melbourne",
+        "timeZone": "Australia/Melbourne",
+        "cityId": 39,
+        "lat": -37.81,
+        "lng": 144.97,
+        "countryName": "Australia",
+        "metadataId": "15",
+        "region": "APACX - ANZ",
+        "megaRegion": "APACX",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Mexico City",
+        "slug": "mexico_city",
+        "timeZone": "America/Mexico_City",
+        "cityId": 90,
+        "lat": 19.432924,
+        "lng": -99.138479,
+        "countryName": "Mexico",
+        "metadataId": "57",
+        "region": "LatAm - Mexico",
+        "megaRegion": "LatAm",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Miami",
+        "slug": "miami",
+        "timeZone": "America/New_York",
+        "cityId": 14,
+        "lat": 25.7889689,
+        "lng": -80.2264393,
+        "countryName": "United States",
+        "metadataId": "133",
+        "region": "US East",
+        "megaRegion": "US \u0026 Canada",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Mumbai",
+        "slug": "mumbai",
+        "timeZone": "Asia/Kolkata",
+        "cityId": 215,
+        "lat": 19.054377,
+        "lng": 72.847026,
+        "countryName": "India",
+        "metadataId": "103",
+        "region": "India SA - West",
+        "megaRegion": "India SA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Nairobi",
+        "slug": "nairobi",
+        "timeZone": "Africa/Nairobi",
+        "cityId": 540,
+        "lat": -1.2831,
+        "lng": 36.8209,
+        "countryName": "Kenya",
+        "metadataId": "47",
+        "region": "EMEA - MEA",
+        "megaRegion": "EMEA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes",
+          "Speeds"
+        ]
+      },
+      {
+        "cityName": "New Delhi",
+        "slug": "new_delhi",
+        "timeZone": "Asia/Colombo",
+        "cityId": 197,
+        "lat": 28.6329,
+        "lng": 77.2196,
+        "countryName": "India",
+        "metadataId": "35",
+        "region": "India SA - North",
+        "megaRegion": "India SA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "New York City",
+        "slug": "new_york",
+        "timeZone": "America/New_York",
+        "cityId": 5,
+        "lat": 40.744842,
+        "lng": -73.991483,
+        "countryName": "United States",
+        "metadataId": "55",
+        "region": "US East",
+        "megaRegion": "US \u0026 Canada",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "Speeds"
+        ]
+      },
+      {
+        "cityName": "Orlando",
+        "slug": "orlando",
+        "timeZone": "America/New_York",
+        "cityId": 208,
+        "lat": 28.5383,
+        "lng": -81.3792,
+        "countryName": "United States",
+        "metadataId": "137",
+        "region": "US East",
+        "megaRegion": "US \u0026 Canada",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Paris",
+        "slug": "paris",
+        "timeZone": "Europe/Paris",
+        "cityId": 3,
+        "lat": 48.856666,
+        "lng": 2.3509871,
+        "countryName": "France",
+        "metadataId": "69",
+        "region": "EMEA - WSE",
+        "megaRegion": "EMEA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes",
+          "MobilityHeatmap"
+        ]
+      },
+      {
+        "cityName": "Perth",
+        "slug": "perth",
+        "timeZone": "Australia/Perth",
+        "cityId": 222,
+        "lat": -31.953,
+        "lng": 115.8575,
+        "countryName": "Australia",
+        "metadataId": "71",
+        "region": "APACX - ANZ",
+        "megaRegion": "APACX",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Pittsburgh",
+        "slug": "pittsburgh",
+        "timeZone": "America/New_York",
+        "cityId": 45,
+        "lat": 40.4406,
+        "lng": -79.9959,
+        "countryName": "United States",
+        "metadataId": "73",
+        "region": "US East",
+        "megaRegion": "US \u0026 Canada",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Rome",
+        "slug": "rome",
+        "timeZone": "Europe/Rome",
+        "cityId": 54,
+        "lat": 41.892916,
+        "lng": 12.48252,
+        "countryName": "Italy",
+        "metadataId": "237",
+        "region": "EMEA - WSE",
+        "megaRegion": "EMEA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "MobilityHeatmap"
+        ]
+      },
+      {
+        "cityName": "San Francisco",
+        "slug": "san_francisco",
+        "timeZone": "America/Los_Angeles",
+        "cityId": 1,
+        "lat": 37.7749295,
+        "lng": -122.4194155,
+        "countryName": "United States",
+        "metadataId": "7",
+        "region": "US West",
+        "megaRegion": "US \u0026 Canada",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes",
+          "Speeds",
+          "MobilityHeatmap"
+        ]
+      },
+      {
+        "cityName": "Santiago",
+        "slug": "santiago",
+        "timeZone": "America/Santiago",
+        "cityId": 148,
+        "lat": -33.4691,
+        "lng": -70.642,
+        "countryName": "Chile",
+        "metadataId": "131",
+        "region": "LatAm - South Cone",
+        "megaRegion": "LatAm",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "São Paulo",
+        "slug": "sao_paulo",
+        "timeZone": "America/Fortaleza",
+        "cityId": 458,
+        "lat": -23.5505,
+        "lng": -46.6333,
+        "countryName": "Brazil",
+        "metadataId": "61",
+        "region": "LatAm - Brazil",
+        "megaRegion": "LatAm",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes",
+          "Speeds"
+        ]
+      },
+      {
+        "cityName": "Seattle",
+        "slug": "seattle",
+        "timeZone": "America/Los_Angeles",
+        "cityId": 10,
+        "lat": 47.6062095,
+        "lng": -122.3320708,
+        "countryName": "United States",
+        "metadataId": "1",
+        "region": "US West",
+        "megaRegion": "US \u0026 Canada",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes",
+          "Speeds"
+        ]
+      },
+      {
+        "cityName": "Stockholm",
+        "slug": "stockholm",
+        "timeZone": "Europe/Stockholm",
+        "cityId": 36,
+        "lat": 59.3289,
+        "lng": 18.0649,
+        "countryName": "Sweden",
+        "metadataId": "177",
+        "region": "EMEA - NEE",
+        "megaRegion": "EMEA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Sydney",
+        "slug": "sydney",
+        "timeZone": "Australia/Sydney",
+        "cityId": 31,
+        "lat": -33.8705,
+        "lng": 151.2076,
+        "countryName": "Australia",
+        "metadataId": "9",
+        "region": "APACX - ANZ",
+        "megaRegion": "APACX",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Taipei",
+        "slug": "taipei",
+        "timeZone": "Asia/Taipei",
+        "cityId": 94,
+        "lat": 25.0911,
+        "lng": 121.5598,
+        "countryName": "Taiwan",
+        "metadataId": "123",
+        "region": "APACX - SENA",
+        "megaRegion": "APACX",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Tampa Bay",
+        "slug": "tampa",
+        "timeZone": "America/New_York",
+        "cityId": 27,
+        "lat": 27.972209,
+        "lng": -82.463684,
+        "countryName": "United States",
+        "metadataId": "135",
+        "region": "US East",
+        "megaRegion": "US \u0026 Canada",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Toronto",
+        "slug": "toronto",
+        "timeZone": "America/New_York",
+        "cityId": 13,
+        "lat": 43.653226,
+        "lng": -79.3831843,
+        "countryName": "Canada",
+        "metadataId": "53",
+        "region": "US Central \u0026 Canada",
+        "megaRegion": "US \u0026 Canada",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Vienna",
+        "slug": "vienna",
+        "timeZone": "Europe/Vienna",
+        "cityId": 224,
+        "lat": 48.2082,
+        "lng": 16.3738,
+        "countryName": "Austria",
+        "metadataId": "173",
+        "region": "EMEA - WSE",
+        "megaRegion": "EMEA",
+        "distanceUnit": "KM",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      },
+      {
+        "cityName": "Washington D.C.",
+        "slug": "washington_DC",
+        "timeZone": "America/New_York",
+        "cityId": 8,
+        "lat": 38.9,
+        "lng": -77.04,
+        "countryName": "United States",
+        "metadataId": "33",
+        "region": "US East",
+        "megaRegion": "US \u0026 Canada",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes",
+          "MobilityHeatmap"
+        ]
+      },
+      {
+        "cityName": "West Midlands, UK",
+        "slug": "west_midlands",
+        "timeZone": "Europe/London",
+        "cityId": 244,
+        "lat": 52.4862429999,
+        "lng": -1.8904009999,
+        "countryName": "United Kingdom",
+        "metadataId": "109",
+        "region": "EMEA - NEE",
+        "megaRegion": "EMEA",
+        "distanceUnit": "MILE",
+        "availableSolutionTypes": [
+          "TravelTimes"
+        ]
+      }
+    ],
+    "isLoading": false
+  },
+  "city": {
+    "solutions": null,
+    "availableSolutionTypes": [],
+    "cityId": 1,
+    "cityName": "",
+    "countryName": "",
+    "distanceUnit": "KM",
+    "lat": 51.51262,
+    "lng": -0.130438,
+    "megaRegion": "",
+    "metadataId": "",
+    "region": "",
+    "slug": "london",
+    "timeZone": ""
+  },
+  "curatedViews": {
+    "views": [],
+    "selectedView": null
+  },
+  "dashboardAvailability": {
+    "isLoading": false,
+    "isLoadingDataGeofences": false,
+    "isLoadingDisplayGeofences": false,
+    "snapshots": [],
+    "statusCounts": {},
+    "areas": [],
+    "displayGeofences": [],
+    "statusCountsByArea": {},
+    "dashboardConfig": null
+  },
+  "dashboardOverview": {
+    "metricDataMap": {},
+    "metricHexDataMap": {},
+    "metricArcDataMap": {},
+    "isLoadingMetricData": {},
+    "isLoadingHexData": {},
+    "isLoadingArcData": false,
+    "dashboardParams": {},
+    "dashboardConfig": null,
+    "selectedMetricId": null
+  },
+  "downloads": {
+    "availableDateRange": null,
+    "citySlug": null,
+    "files": [],
+    "filters": {},
+    "isLoading": true,
+    "lastFetched": {
+      "metadataId": null,
+      "solutionType": null,
+      "timePeriod": null
+    },
+    "solution": null,
+    "solutions": {}
+  },
+  "explore": {
+    "errors": {},
+    "isCompareQueryBox": false,
+    "isLoading": {},
+    "isShowingAnalysisContainer": false,
+    "isShowingDownloadModal": false,
+    "isShowingMapSpinner": false,
+    "isShowingProductSwitcherModal": false,
+    "isShowingQueryBox": false,
+    "isShowingShareModal": false,
+    "isShowingTravelTimesWalkThrough": false
+  },
+  "flags": {
+    "allowSpeedsDebugging": false,
+    "allowSpeedsMultiSelect": false,
+    "shouldEnableReverseLocationLookup": false,
+    "showAnalyzeLinkInDashboard": false
+  },
+  "keplerGl": {},
+  "map": {
+    "mapStyle": null,
+    "pointOfInterest": null,
+    "viewState": {
+      "width": 800,
+      "height": 600,
+      "latitude": 47.59875420709821,
+      "longitude": -122.2186684645196,
+      "zoom": 12,
+      "pitch": 0,
+      "bearing": 0
+    }
+  },
+  "mobilityHeatmap": {
+    "isLoadingGpsPingData": false,
+    "gpsPingData": null,
+    "timePeriodData": null,
+    "gpsPingFetchError": null,
+    "isLoadingBikeLanes": false,
+    "bikeLanesData": null,
+    "bikeLanesFetchError": null,
+    "selectedDays": "weekday",
+    "showBikeLanes": false,
+    "opacity": 0.85
+  },
+  "speeds": {
+    "clickedRoadMetadata": null,
+    "isMultiSelectMode": false,
+    "hoveredSegmentId": null,
+    "query": {
+      "cityId": null,
+      "dateTime": {
+        "timePeriodBucket": "ALL_DAY",
+        "weekdays": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "dateRange": null
+      }
+    },
+    "segmentDataByRoadId": {},
+    "corridor": {
+      "isLoading": false,
+      "byDate": [],
+      "byDoW": [],
+      "byTpb": [],
+      "travelTime": -1
+    }
+  },
+  "travelTimes": {
+    "colorScale": [],
+    "sourceFeature": null,
+    "targetFeature": null,
+    "hasTargetLocationError": false,
+    "hasSourceLocationError": false,
+    "query": {
+      "cityId": null,
+      "sourceId": "",
+      "targetId": "",
+      "dataSet": "",
+      "dateTime": {
+        "timePeriodBucket": "ALL_DAY",
+        "weekdays": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "dateRange": null
+      },
+      "comparedDateTime": null,
+      "shapeFilePath": null
+    },
+    "detailedTravelTimes": null,
+    "data": {
+      "isLoaded": false,
+      "choropleths": null,
+      "values": null
+    },
+    "downloadAllDataFileSizes": {
+      "hourlyAggAll": null,
+      "hourlyAggWeekdays": null,
+      "hourlyAggWeekends": null,
+      "weeklyAgg": null,
+      "monthlyAggAll": null,
+      "monthlyAggWeekdays": null,
+      "monthlyAggWeekends": null
+    },
+    "downloadAllDataQuarterSelected": {
+      "quarter": null,
+      "year": null
+    },
+    "downloadAllDataDownloadError": false,
+    "downloadAllDataSupportedQuarters": [],
+    "downloadGeoBoundariesIsLegalAgreementCheckboxChecked": false
+  },
+  "user": null,
+  "userGeo": {
+    "continentCode": "EU",
+    "continentName": "Europe",
+    "countryCode": "CH",
+    "countryName": "Switzerland",
+    "cityName": "Zurich",
+    "lat": 47.4021,
+    "lng": 8.5752,
+    "accuracy": 50,
+    "timeZone": "Europe/Zurich"
+  }
+}
