@@ -1,0 +1,7 @@
+name: conda-qgis
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10.6
+  - qgis=3.22.11

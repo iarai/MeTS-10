@@ -141,3 +141,11 @@ dmypy.json
 /artifacts/
 #**/*_nb.py
 _archive
+
+
+*.aux
+*.out
+*.toc
+*.gpkg
+*.parquet
+*.pgw

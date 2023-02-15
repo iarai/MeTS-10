@@ -1,0 +1,36 @@
+name: mets-10
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - pip
+  - pip:
+      #====================================================
+      # (1) DEPENDENCIES
+      #====================================================
+      - pyarrow
+      - h5py
+      - shapely
+      - geographiclib
+      - geopandas
+      - osmnx
+      - notebook==6.4.12
+      - ipywidgets==7.7.1
+      - jupytext
+      - seaborn==0.12.1
+      - folium
+
+      #====================================================
+      # (2) LOCAL DEV + CI DEPENDENCIES
+      # put additional for dependencies required in ci here
+      #====================================================
+      - flake8
+      - flake8-docstrings==1.5.0
+      - mypy
+      - pytest
+      - pytest-cov
+      - pytest-benchmark
+      - pytest-mypy
+      - pytest-mock
+      - pre-commit
+      - vulture
