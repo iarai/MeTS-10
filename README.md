@@ -1,7 +1,7 @@
 Data Pipeline and Analysis Code for paper "Metropolitan Segment Traffic Speeds from Massive Floating Car Data in 10 Cities" (MeTS-10)
 ===============================================================================
 
-[![Tests](https://github.com/chenkins/MeTS-10/actions/workflows/tests.yaml/badge.svg)](https://github.com/chenkins/MeTS-10/actions/workflows/tests.yaml)
+[![Tests](https://github.com/iarai/MeTS-10/actions/workflows/tests.yaml/badge.svg)](https://github.com/iarai/MeTS-10/actions/workflows/tests.yaml)
 [![Code style: flake8](https://img.shields.io/badge/Code%20style-flake8-yellow.svg)](https://github.com/pycqa/flake8/)
 [![Code formatter: black](https://img.shields.io/badge/Code%20formatter-black-000000.svg)](https://github.com/psf/black)
 
