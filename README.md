@@ -7,7 +7,7 @@ Data Pipeline and Analysis Code for paper "Metropolitan Segment Traffic Speeds f
 
 ## About this repo
 
-This is a github repo to share code for the MeTS-10 Dataset Paper.
+This is a github repo to share code for the [MeTS-10 Dataset Paper](https://arxiv.org/abs/2302.08761) (pre-print, submitted for review).
 
 ## MeTS-10 Data Pipeline
 
@@ -47,3 +47,18 @@ pre-commit run --all
 See https://blog.mphomphego.co.za/blog/2019/10/03/Why-you-need-to-stop-using-Git-Hooks.html
 
 In order to temporarily skip running `pre-commit`, run `git commit -n`.
+
+## Cite
+Please cite this repo along with the pre-print:
+```
+@misc{https://doi.org/10.48550/arxiv.2302.08761,
+  doi = {10.48550/ARXIV.2302.08761},
+  url = {https://arxiv.org/abs/2302.08761},
+  author = {Neun, Moritz and Eichenberger, Christian and Xin, Yanan and Fu, Cheng and Wiedemann, Nina and Martin, Henry and Tomko, Martin and Ambühl, Lukas and Hermes, Luca and Kopp, Michael},
+  keywords = {Machine Learning (cs.LG), FOS: Computer and information sciences, FOS: Computer and information sciences},
+  title = {Metropolitan Segment Traffic Speeds from Massive Floating Car Data in 10 Cities},
+  publisher = {arXiv},
+  year = {2023}, 
+  copyright = {arXiv.org perpetual, non-exclusive license}
+}
+```
