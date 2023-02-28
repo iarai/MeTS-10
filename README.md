@@ -58,7 +58,7 @@ Please cite this repo along with the pre-print:
   keywords = {Machine Learning (cs.LG), FOS: Computer and information sciences, FOS: Computer and information sciences},
   title = {Metropolitan Segment Traffic Speeds from Massive Floating Car Data in 10 Cities},
   publisher = {arXiv},
-  year = {2023}, 
+  year = {2023},
   copyright = {arXiv.org perpetual, non-exclusive license}
 }
 ```
