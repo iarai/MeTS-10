@@ -8,27 +8,34 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.11.2
 #   kernelspec:
-#     display_name: Python [conda env:t4c] *
+#     display_name: Python [conda env:t4c22]
 #     language: python
-#     name: conda-env-t4c-py
+#     name: conda-env-t4c22-py
 # ---
 
 # +
-import pandas as pd
-import numpy as np
+import csv
+import glob
+import json
+import locale
+import os
+import tempfile
+import xml.etree.ElementTree as ET
+import zipfile
+from datetime import datetime, timedelta
+from io import TextIOWrapper
+from math import floor
+from pathlib import Path
+
+import boto3
 import geojson
 import geopandas
-from pathlib import Path
+import numpy as np
+import pandas as pd
+import pyproj
 import requests
-from math import floor
-import json
-from datetime import datetime, timedelta
-import os
-import xml.etree.ElementTree as ET
-import locale
-import zipfile
-import tempfile
-import glob
+from shapely.geometry import Point
+from shapely.ops import transform
 
 # DATA_PATH expects a working structure with mets10 data generated and city subfolders
 # ├── loop_counters
@@ -58,7 +65,27 @@ DATA_PATH = Path('/private/data/mets10')
 BERLIN_PATH = DATA_PATH / 'loop_counters' / 'berlin'
 LONDON_PATH = DATA_PATH / 'loop_counters' / 'london'
 MADRID_PATH = DATA_PATH / 'loop_counters' / 'madrid'
+MELBOURNE_PATH = DATA_PATH / 'loop_counters' / 'melbourne'  # not used for the validations (no time overlap)
+
+
 # -
+
+def get_gdf(df, id_field='id', bbox=None):
+    df = df.copy()
+    df['id'] = df[id_field].astype(str)
+    if 'lat' not  in df.columns:
+        df['lon'] = df.geometry.x
+        df['lat'] = df.geometry.y
+    if 'heading' not in df.columns:
+        df['heading'] = -1
+    df = df[['id', 'lat', 'lon', 'heading']]
+    gdf = geopandas.GeoDataFrame(
+        df, geometry=geopandas.points_from_xy(df.lon, df.lat))
+    if bbox:
+        ymin, ymax, xmin, xmax = tuple([v/100000 for v in bbox])
+        gdf = gdf.cx[xmin:xmax, ymin:ymax]
+    return gdf
+
 
 # # Berlin
 #
@@ -81,6 +108,9 @@ berlin_locations_df
 
 berlin_locations_df[berlin_locations_df['detid_15'].duplicated()]
 
+# Store the counter locations to geojson
+get_gdf(berlin_locations_df, 'detid_15').to_file(BERLIN_PATH / 'counter_locations.geojson', driver="GeoJSON")
+
 
 # +
 def get_counters_merged(year, month, locations_df):
@@ -92,13 +122,11 @@ def get_counters_merged(year, month, locations_df):
     df['time_bin'] = [f'{d[6:]}-{d[3:5]}-{d[:2]} {h:02d}:00' for d, h in zip(df['tag'], df['stunde'])]
     df.to_parquet(BERLIN_PATH / 'speed' / f'counters_{year:04d}-{month:02d}.parquet', compression="snappy")
     return df
-    
-berlin202107_df = get_counters_merged(2021, 7, berlin_locations_df)
-berlin202107_df
-# -
 
-berlin201906_df = get_counters_merged(2019, 6, berlin_locations_df)
-berlin201906_df
+# TODO: uncomment if processing data
+# get_counters_merged(2021, 7, berlin_locations_df)
+get_counters_merged(2019, 6, berlin_locations_df)
+# -
 
 # # London
 #
@@ -210,14 +238,15 @@ def download_webtris_chunks(webtris_sites, date_from, date_to, chunk_size=20):
         chunk_data = get_chunk(req_id_chunks[i], date_from=date_from, date_to=date_to)
         joined_data = join_site_info(chunk_data, sites_dict)
         save_json_rows(joined_data, f'webtris_chunk_{date_from}_{date_to}_{i:03}')
-        
+
+# TODO: uncomment if processing data
 # download_webtris_chunks(webtris_sites, '2019-07-01', '2019-07-31')
 # download_webtris_chunks(webtris_sites, '2019-08-01', '2019-08-31')
 # download_webtris_chunks(webtris_sites, '2019-09-01', '2019-09-30')
 # download_webtris_chunks(webtris_sites, '2019-10-01', '2019-10-31')
 # download_webtris_chunks(webtris_sites, '2019-11-01', '2019-11-30')
 # download_webtris_chunks(webtris_sites, '2019-12-01', '2019-12-31')
-download_webtris_chunks(webtris_sites, '2020-01-01', '2020-01-31')
+# download_webtris_chunks(webtris_sites, '2020-01-01', '2020-01-31')
 
 
 # +
@@ -250,12 +279,74 @@ def convert_webtris_chunks(do_floor=True):
     df = df[['id', 'name', 'lat', 'lon', 'heading', 'time_bin', 'volume', 'speed_counter', 't', 'day']]
     return df
 
-webtris_df = convert_webtris_chunks()
-webtris_df
+# TODO: uncomment if processing data
+# webtris_df = convert_webtris_chunks()
+# webtris_df
+
+
+# +
+# TODO: uncomment if processing data
+# webtris_df['name'] = webtris_df['name'].astype(str)
+# webtris_df.to_parquet(LONDON_PATH / 'speed' / 'webtris_london_201907-202001.parquet', compression="snappy")
 # -
 
-webtris_df['name'] = webtris_df['name'].astype(str)
-webtris_df.to_parquet(LONDON_PATH / 'speed' / 'webtris_london_201907-202001.parquet', compression="snappy")
+# Read TfL TIMS locations (additional data, currently not used for validations)
+
+# +
+bucket = 'roads.data.tfl.gov.uk'
+prefix = 'TIMS/'
+s3_client = boto3.client('s3')
+
+def read_tims_csv_file(csv_file):
+    response = s3_client.get_object(Bucket=bucket, Key=csv_file)
+    return pd.read_csv(response.get("Body"))
+
+def get_tims_csv_files(limit=-1):
+    tims_csv_files = []
+    paginator = s3_client.get_paginator("list_objects_v2")
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix, Delimiter='/'):
+        pf = [c['Key'] for c in page["Contents"] if c['Key'].endswith('.csv')]
+        tims_csv_files.extend(pf)
+        if limit > 0 and len(tims_csv_files) >= limit:
+            return tims_csv_files[:limit]
+        return tims_csv_files
+
+tims_csv_files = get_tims_csv_files(5)
+tims_df = read_tims_csv_file(tims_csv_files[0])
+tims_df
+
+# +
+gbng = pyproj.CRS('EPSG:27700')
+wgs84 = pyproj.CRS('EPSG:4326')
+project = pyproj.Transformer.from_crs(gbng, wgs84, always_xy=True).transform
+
+def getProjectedPoint(r):
+    try:
+        return transform(project, Point(float(r['EASTING']), float(r['NORTHING'])))
+    except Exception as e:
+        print(e)
+        return Point(0, 0)
+    
+tims_df['id'] = tims_df['NODE']
+tims_df['geometry'] = tims_df.apply(getProjectedPoint, axis=1)
+tims_df = geopandas.GeoDataFrame(tims_df, geometry='geometry')
+tims_df['lon'] = tims_df.geometry.x
+tims_df['lat'] = tims_df.geometry.y
+tims_df = tims_df[['id', 'lat', 'lon']].groupby(['id', 'lat', 'lon']).min().reset_index()
+tims_df
+# -
+
+# Create a dataframe with all london locations (WEBTRIS and TIMS)
+webtris_df = pd.DataFrame.from_records(webtris_sites).rename(
+    columns={'Id': 'id', 'Latitude': 'lat', 'Longitude': 'lon'})
+webtris_df
+
+london_locations = pd.concat([webtris_df[['id', 'lat', 'lon']], tims_df[['id', 'lat', 'lon']]])
+london_locations = get_gdf(london_locations, bbox=LONDON_BBOX)
+london_locations
+
+# Store the counter locations to geojson
+london_locations.to_file(LONDON_PATH / 'counter_locations.geojson', driver="GeoJSON")
 
 
 # # Madrid
@@ -297,16 +388,18 @@ url = "https://datos.madrid.es/egob/catalogo/202468-0-intensidad-trafico.dcat"
 out_file = MADRID_PATH / 'downloads' / '202468-0-intensidad-trafico.dcat'
 os.system(f"wget -O {out_file} {url}")
 
-download_dcat_zips('202468-0-intensidad-trafico.dcat', prefix='locations', month_names=False,
-                   months=['2021-06', '2021-07', '2021-08', '2021-09', '2021-10', '2021-11', '2021-12'])
+# TODO: uncomment if processing data
+# download_dcat_zips('202468-0-intensidad-trafico.dcat', prefix='locations', month_names=False,
+#                    months=['2021-06', '2021-07', '2021-08', '2021-09', '2021-10', '2021-11', '2021-12'])
 
 # +
 url = "https://datos.madrid.es/egob/catalogo/208627-0-transporte-ptomedida-historico.dcat"
 out_file = MADRID_PATH / 'downloads' / '208627-0-transporte-ptomedida-historico.dcat'
 os.system(f"wget -O {out_file} {url}")
 
-download_dcat_zips('208627-0-transporte-ptomedida-historico.dcat', prefix='data', month_names=True,
-                   months=['2021-06', '2021-07', '2021-08', '2021-09', '2021-10', '2021-11', '2021-12'])
+# TODO: uncomment if processing data
+# download_dcat_zips('208627-0-transporte-ptomedida-historico.dcat', prefix='data', month_names=True,
+#                    months=['2021-06', '2021-07', '2021-08', '2021-09', '2021-10', '2021-11', '2021-12'])
 
 # +
 from math import atan2, cos, sin, degrees
@@ -456,6 +549,12 @@ for id, mll in merged_locations.items():
 feature_collection = geojson.FeatureCollection(features)
 with open(MADRID_PATH / 'downloads' / 'counter_locations_merged.geojson', 'w') as f:
     geojson.dump(feature_collection, f)
+# -
+
+# Store the counter locations to geojson
+get_gdf(geopandas.read_file(
+    MADRID_PATH / 'downloads' / 'counter_locations_merged.geojson')[['id', 'lat', 'lon', 'heading']]
+       ).to_file(MADRID_PATH / 'counter_locations.geojson', driver="GeoJSON")
 
 # +
 import csv
@@ -532,14 +631,82 @@ def process_madrid_month(month, output_path):
     return month_df
 
 
-# madrid_counters_df = process_madrid_month('2021-06', MADRID_PATH)
-# madrid_counters_df
-# -
-
+# +
+# TODO: uncomment if processing data
 # process_madrid_month('2021-06', MADRID_PATH)
-process_madrid_month('2021-07', MADRID_PATH)
+# process_madrid_month('2021-07', MADRID_PATH)
 # process_madrid_month('2021-08', MADRID_PATH)
 # process_madrid_month('2021-09', MADRID_PATH)
 # process_madrid_month('2021-10', MADRID_PATH)
 # process_madrid_month('2021-11', MADRID_PATH)
 # process_madrid_month('2021-12', MADRID_PATH)
+# -
+
+# # Melbourne (additional data, currently not used for validations)
+#
+# The raw files are getting downloaded from https://discover.data.vic.gov.au/dataset/traffic-signal-volume-data
+
+# +
+VIC_OPENDATA = 'https://vicroadsopendatastorehouse.vicroads.vic.gov.au/opendata'
+
+def scrape_vicroads():
+    for date in pd.date_range('2020-05-01', '2021-01-31', freq='M'):
+        month = date.strftime("%Y%m")
+        zip_file = MELBOURNE_PATH / 'downloads' / f'VSDATA_{month}.zip'
+        if os.path.exists(zip_file):
+            continue
+        zip_file.parent.mkdir(exist_ok=True, parents=True)
+        url = f'{VIC_OPENDATA}/Traffic_Measurement/SCATS/VSDATA/VSDATA_{month}.zip'
+        print(f'Downloading {url}')
+        r = requests.get(url, allow_redirects=True)
+        open(zip_file, 'wb').write(r.content)
+        
+scrape_vicroads()
+# -
+
+#Download https://discover.data.vic.gov.au/dataset/traffic-lights1 as geojson
+locations_url = (
+    'https://vicroadsopendata-vicroadsmaps.opendata.arcgis.com/datasets/'
+    '1f3cb954526b471596dbffa30e56bb32_0.geojson?outSR=%7B%22latestWkid%22%3A3111%2C%22wkid%22%3A102171%7D'
+)
+r = requests.get(locations_url, allow_redirects=True)
+open(MELBOURNE_PATH / 'downloads' / 'Traffic_Lights.geojson', 'wb').write(r.content)
+
+# +
+MELBOURNE_BBOX = [-3810600, -3761100, 14475700, 14519300]
+
+melbourne_locations = geopandas.read_file(MELBOURNE_PATH / 'downloads' / 'Traffic_Lights.geojson')
+print(f'Loaded {len(melbourne_locations)} site locations')
+
+
+# +
+def read_vsdata_site_ids(zip_file, locations_df):
+    all_site_ids = set()
+    cfa = zipfile.ZipFile(zip_file, 'r')
+    for csv_file in cfa.namelist():
+        f = cfa.open(csv_file, 'r')
+        csvreader = csv.reader(TextIOWrapper(f, 'utf-8'), delimiter=',')
+        header = next(csvreader)
+        for row in csvreader:
+            try:
+                nb_scats_site = int(row[0])
+                all_site_ids.add(nb_scats_site)
+            except Exception:
+                continue
+    print(f'Read {len(all_site_ids)} unique locations')
+    return list(all_site_ids)
+
+melbourne_site_ids = read_vsdata_site_ids(MELBOURNE_PATH / 'downloads' / 'VSDATA_202006.zip', melbourne_locations)
+
+# +
+# Filter only the used counter locations in the bounding box
+melbourne_locations = melbourne_locations[melbourne_locations['SITE_NO'].isin(melbourne_site_ids)]
+ymin, ymax, xmin, xmax = tuple([v/100000 for v in MELBOURNE_BBOX])
+melbourne_locations = melbourne_locations.cx[xmin:xmax, ymin:ymax]
+
+melbourne_locations = melbourne_locations.sort_values(by='SITE_NO')
+melbourne_locations
+# -
+
+# Store the counter locations to geojson
+get_gdf(melbourne_locations, 'SITE_NO').to_file(MELBOURNE_PATH / 'counter_locations.geojson', driver="GeoJSON")

@@ -14,11 +14,13 @@ dependencies:
       - geographiclib
       - geopandas
       - osmnx
+      - openpyxl
       - notebook==6.4.12
       - ipywidgets==7.7.1
       - jupytext
       - seaborn==0.12.1
       - folium
+      - boto3
 
       #====================================================
       # (2) LOCAL DEV + CI DEPENDENCIES
