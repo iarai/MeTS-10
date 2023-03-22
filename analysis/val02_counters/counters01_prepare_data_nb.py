@@ -19,9 +19,11 @@ import glob
 import json
 import locale
 import os
+import re
 import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
+from calendar import monthrange
 from datetime import datetime, timedelta
 from io import TextIOWrapper
 from math import floor
@@ -296,11 +298,7 @@ def convert_webtris_chunks(do_floor=True):
 bucket = 'roads.data.tfl.gov.uk'
 prefix = 'TIMS/'
 s3_client = boto3.client('s3')
-
-def read_tims_csv_file(csv_file):
-    response = s3_client.get_object(Bucket=bucket, Key=csv_file)
-    return pd.read_csv(response.get("Body"))
-
+    
 def get_tims_csv_files(limit=-1):
     tims_csv_files = []
     paginator = s3_client.get_paginator("list_objects_v2")
@@ -309,10 +307,30 @@ def get_tims_csv_files(limit=-1):
         tims_csv_files.extend(pf)
         if limit > 0 and len(tims_csv_files) >= limit:
             return tims_csv_files[:limit]
-        return tims_csv_files
+    return tims_csv_files
 
-tims_csv_files = get_tims_csv_files(5)
-tims_df = read_tims_csv_file(tims_csv_files[0])
+def read_tims_csv_file(csv_file):
+    response = s3_client.get_object(Bucket=bucket, Key=csv_file)
+    return pd.read_csv(response.get("Body"))
+
+def read_tims_day(day, debug=False, all_fields=False):
+    ts = datetime.strptime(day, '%Y-%m-%d')
+    tims_day_file = LONDON_PATH / 'downloads' /  f'tims_{day}.parquet'
+    if os.path.exists(tims_day_file):
+        return pd.read_parquet(tims_day_file)
+    file_prefix = f'detdata{ts.day:02d}{ts.month:02d}{ts.year:04d}'
+    files = [fp for fp in tims_csv_files if file_prefix in fp]
+    print(f'Downloading {len(files)} files for {day}')
+    df = pd.concat([read_tims_csv_file(fp) for fp in files])
+    tims_day_file.parent.mkdir(exist_ok=True, parents=True)
+    df.to_parquet(tims_day_file, compression="snappy")
+    return df
+
+tims_csv_files = get_tims_csv_files()
+len(tims_csv_files)
+# -
+
+tims_df = read_tims_day('2019-01-04')
 tims_df
 
 # +
@@ -320,34 +338,134 @@ gbng = pyproj.CRS('EPSG:27700')
 wgs84 = pyproj.CRS('EPSG:4326')
 project = pyproj.Transformer.from_crs(gbng, wgs84, always_xy=True).transform
 
-def getProjectedPoint(r):
+def en2ll(e, n):
     try:
-        return transform(project, Point(float(r['EASTING']), float(r['NORTHING'])))
+        return transform(project, Point(e, n))
     except Exception as e:
         print(e)
         return Point(0, 0)
-    
-tims_df['id'] = tims_df['NODE']
-tims_df['geometry'] = tims_df.apply(getProjectedPoint, axis=1)
-tims_df = geopandas.GeoDataFrame(tims_df, geometry='geometry')
-tims_df['lon'] = tims_df.geometry.x
-tims_df['lat'] = tims_df.geometry.y
-tims_df = tims_df[['id', 'lat', 'lon']].groupby(['id', 'lat', 'lon']).min().reset_index()
-tims_df
+
+def get_projected_point(r):
+    return en2ll(float(r['EASTING']), float(r['NORTHING']))
+
+def get_tims_locations(df):
+    df['id'] = tims_df['NODE']
+    df = df[['id', 'EASTING', 'NORTHING']].groupby(['id', 'EASTING', 'NORTHING']).min().reset_index()
+    df['geometry'] = df.apply(get_projected_point, axis=1)
+    df = geopandas.GeoDataFrame(df, geometry='geometry')
+    df['lon'] = df.geometry.x
+    df['lat'] = df.geometry.y
+    return df[['id', 'lat', 'lon']]
+
+tims_locations = get_tims_locations(tims_df) 
+tims_locations
 # -
 
 # Create a dataframe with all london locations (WEBTRIS and TIMS)
-webtris_df = pd.DataFrame.from_records(webtris_sites).rename(
+webtris_locations = pd.DataFrame.from_records(webtris_sites).rename(
     columns={'Id': 'id', 'Latitude': 'lat', 'Longitude': 'lon'})
-webtris_df
+webtris_locations
 
-london_locations = pd.concat([webtris_df[['id', 'lat', 'lon']], tims_df[['id', 'lat', 'lon']]])
+london_locations = pd.concat([webtris_locations[['id', 'lat', 'lon']], tims_locations[['id', 'lat', 'lon']]])
 london_locations = get_gdf(london_locations, bbox=LONDON_BBOX)
 london_locations
 
 # Store the counter locations to geojson
 london_locations.to_file(LONDON_PATH / 'counter_locations.geojson', driver="GeoJSON")
 
+
+# +
+def normalize_tims_volumes(time_bins, volumes, num_bins=96):
+    result = []
+    for ts, vs in zip(time_bins, volumes):
+        res_volumes = [-1 for _ in range(num_bins)]
+        for idx, v in zip(ts, vs):
+            assert(0 <= idx < num_bins)
+            res_volumes[idx] = int(round(float(v)))
+        result.append(res_volumes)
+    return result
+
+
+def process_tims_day(day):
+    day_ts = datetime.strptime(day, '%Y-%m-%d')
+    dfa =pd.concat([
+        read_tims_day((day_ts - timedelta(days=1)).strftime('%Y-%m-%d')),
+        read_tims_day(day),
+        read_tims_day((day_ts + timedelta(days=1)).strftime('%Y-%m-%d'))
+    ])
+    raw_num_records = len(dfa)
+    dfa = dfa[dfa['TIMESTAMP'].str.startswith(day)]
+    print(f'Read {len(dfa)}/{raw_num_records} records for {day}')
+    raw_num_records = len(dfa)
+    
+    # Filter invalid records, convert the fields and generate time bins
+    dfa['ts'] = pd.to_datetime(dfa['TIMESTAMP'], infer_datetime_format=True, errors='coerce')
+    dfa = dfa[dfa['ts'].notna()]
+    dfa['time_bin'] = dfa['ts'].dt.hour * 4 + (dfa['ts'].dt.minute/15).astype(int)
+    dfa['day'] = day
+    dfa = dfa.drop(columns=['TIMESTAMP'])
+    dfa = dfa.rename(columns={
+        'NODE': 'id', 'EASTING': 'east', 'NORTHING': 'north', 'FLOW_ACTUAL_15M': 'flow_15m',
+        'SAT_BANDINGS': 'sat_bandings', 'DETECTOR_NO': 'det_no', 'TOTAL_DETECTOR_NO': 'num_det',
+        'DETECTOR_RATE': 'detector_rate'
+    })
+    dfa['east'] = pd.to_numeric(dfa['east'], errors='coerce')
+    dfa['north'] = pd.to_numeric(dfa['north'], errors='coerce')
+    dfa = dfa[dfa['east'].notna() & dfa['north'].notna()]
+    if len(dfa) < raw_num_records:
+        print(f'  filtered {raw_num_records - len(dfa)} invalid records')
+    dfa['flow_15m'] = pd.to_numeric(dfa['flow_15m'], errors='coerce')
+    dfa['det_no'] = pd.to_numeric(dfa['det_no'], errors='coerce')
+    dfa['num_det'] = pd.to_numeric(dfa['num_det'], errors='coerce')
+    dfa['detector_rate'] = pd.to_numeric(dfa['detector_rate'], errors='coerce')
+    
+    # Aggregate to average 15 minute volumes and generate one row per day
+    df = dfa[['day', 'time_bin', 'id', 'east', 'north', 'flow_15m']].groupby(
+        by=['day', 'time_bin', 'id', 'east', 'north']).mean().reset_index()
+    df = df.rename(columns={'flow_15m': 'volume'})
+    print(f'Collected {len(df)} time bin volumes for {day}')
+    df = df.groupby(by=['day', 'id', 'east', 'north']).agg(list).reset_index()
+    df['volume'] = normalize_tims_volumes(df['time_bin'], df['volume'])
+    df['lat'] = [en2ll(float(e), float(n)).y for e, n in zip(df['east'], df['north'])]
+    df['lon'] = [en2ll(float(e), float(n)).x for e, n in zip(df['east'], df['north'])]
+    df['heading'] = -1.0
+    print(f'Aggregated {len(df)} counter volume lists for {day}')
+    return df[['id', 'lat', 'lon', 'heading', 'day', 'volume']]
+
+
+def process_tims_month(year, month):
+    tims_month_file = LONDON_PATH / 'flow' / f'counters_tims_{month}.parquet'
+    if os.path.exists(tims_month_file):
+        print(f'File {tims_month_file} exists already')
+    
+    day_dfs = []
+    _, n = monthrange(year, month)
+    for i in range(1, n + 1):
+        day = f'{year:04d}-{month:02d}-{i:02d}'
+        df = process_tims_day(day)
+        if len(df) == 0:
+            continue
+        day_dfs.append(df)
+    month_df = pd.concat(day_dfs)
+    
+    lat_min, lat_max, lon_min, lon_max = tuple([ll/100000 for ll in LONDON_BBOX])
+    month_df = month_df[
+        (month_df['lat'] >= lat_min) & (month_df['lat'] <= lat_max) &
+        (month_df['lon'] >= lon_min) & (month_df['lon'] <= lon_max)]
+    
+    tims_month_file.parent.mkdir(exist_ok=True, parents=True)
+    month_df.to_parquet(tims_month_file, compression="snappy")
+    return month_df
+
+
+# process_tims_day('2019-01-04')
+# TODO: uncomment if processing data
+process_tims_month(2019, 1)
+
+
+# +
+# TODO: merge with webtris 'webtris_london_201907-202001.parquet' for all counters file
+# -
 
 # # Madrid
 #
@@ -384,20 +502,18 @@ def download_dcat_zips(dcat_file, prefix, month_names=False, months=None):
 
 
 # +
-url = "https://datos.madrid.es/egob/catalogo/202468-0-intensidad-trafico.dcat"
-out_file = MADRID_PATH / 'downloads' / '202468-0-intensidad-trafico.dcat'
-os.system(f"wget -O {out_file} {url}")
-
 # TODO: uncomment if processing data
+# url = "https://datos.madrid.es/egob/catalogo/202468-0-intensidad-trafico.dcat"
+# out_file = MADRID_PATH / 'downloads' / '202468-0-intensidad-trafico.dcat'
+# os.system(f"wget -O {out_file} {url}")
 # download_dcat_zips('202468-0-intensidad-trafico.dcat', prefix='locations', month_names=False,
 #                    months=['2021-06', '2021-07', '2021-08', '2021-09', '2021-10', '2021-11', '2021-12'])
 
 # +
-url = "https://datos.madrid.es/egob/catalogo/208627-0-transporte-ptomedida-historico.dcat"
-out_file = MADRID_PATH / 'downloads' / '208627-0-transporte-ptomedida-historico.dcat'
-os.system(f"wget -O {out_file} {url}")
-
 # TODO: uncomment if processing data
+# url = "https://datos.madrid.es/egob/catalogo/208627-0-transporte-ptomedida-historico.dcat"
+# out_file = MADRID_PATH / 'downloads' / '208627-0-transporte-ptomedida-historico.dcat'
+# os.system(f"wget -O {out_file} {url}")
 # download_dcat_zips('208627-0-transporte-ptomedida-historico.dcat', prefix='data', month_names=True,
 #                    months=['2021-06', '2021-07', '2021-08', '2021-09', '2021-10', '2021-11', '2021-12'])
 
