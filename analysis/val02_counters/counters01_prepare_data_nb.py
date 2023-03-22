@@ -375,7 +375,7 @@ london_locations.to_file(LONDON_PATH / 'counter_locations.geojson', driver="GeoJ
 
 
 # +
-def normalize_tims_volumes(time_bins, volumes, num_bins=96):
+def normalize_volumes(time_bins, volumes, num_bins=96):
     result = []
     for ts, vs in zip(time_bins, volumes):
         res_volumes = [-1 for _ in range(num_bins)]
@@ -384,6 +384,13 @@ def normalize_tims_volumes(time_bins, volumes, num_bins=96):
             res_volumes[idx] = int(round(float(v)))
         result.append(res_volumes)
     return result
+
+
+def process_volume_normalization(df):
+    df = df.groupby(by=['day', 'id', 'lat', 'lon', 'heading']).agg(list).reset_index()
+    df['volume'] = normalize_volumes(df['t'], df['volume'])
+    print(f'Aggregated {len(df)} counter volume lists')
+    return df #[['id', 'lat', 'lon', 'heading', 'day', 't', 'volume']]
 
 
 def process_tims_day(day):
@@ -401,7 +408,7 @@ def process_tims_day(day):
     # Filter invalid records, convert the fields and generate time bins
     dfa['ts'] = pd.to_datetime(dfa['TIMESTAMP'], infer_datetime_format=True, errors='coerce')
     dfa = dfa[dfa['ts'].notna()]
-    dfa['time_bin'] = dfa['ts'].dt.hour * 4 + (dfa['ts'].dt.minute/15).astype(int)
+    dfa['t'] = dfa['ts'].dt.hour * 4 + (dfa['ts'].dt.minute/15).astype(int)
     dfa['day'] = day
     dfa = dfa.drop(columns=['TIMESTAMP'])
     dfa = dfa.rename(columns={
@@ -420,23 +427,21 @@ def process_tims_day(day):
     dfa['detector_rate'] = pd.to_numeric(dfa['detector_rate'], errors='coerce')
     
     # Aggregate to average 15 minute volumes and generate one row per day
-    df = dfa[['day', 'time_bin', 'id', 'east', 'north', 'flow_15m']].groupby(
-        by=['day', 'time_bin', 'id', 'east', 'north']).mean().reset_index()
+    df = dfa[['day', 't', 'id', 'east', 'north', 'flow_15m']].groupby(
+        by=['day', 't', 'id', 'east', 'north']).mean().reset_index()
     df = df.rename(columns={'flow_15m': 'volume'})
     print(f'Collected {len(df)} time bin volumes for {day}')
-    df = df.groupby(by=['day', 'id', 'east', 'north']).agg(list).reset_index()
-    df['volume'] = normalize_tims_volumes(df['time_bin'], df['volume'])
     df['lat'] = [en2ll(float(e), float(n)).y for e, n in zip(df['east'], df['north'])]
     df['lon'] = [en2ll(float(e), float(n)).x for e, n in zip(df['east'], df['north'])]
     df['heading'] = -1.0
-    print(f'Aggregated {len(df)} counter volume lists for {day}')
-    return df[['id', 'lat', 'lon', 'heading', 'day', 'volume']]
+    return df[['id', 'lat', 'lon', 'heading', 'day', 't', 'volume']]
 
 
 def process_tims_month(year, month):
-    tims_month_file = LONDON_PATH / 'flow' / f'counters_tims_{month}.parquet'
+    tims_month_file = LONDON_PATH / 'flow' / f'counters_tims_{year:04d}-{month:02d}.parquet'
     if os.path.exists(tims_month_file):
         print(f'File {tims_month_file} exists already')
+        return
     
     day_dfs = []
     _, n = monthrange(year, month)
@@ -458,13 +463,36 @@ def process_tims_month(year, month):
     return month_df
 
 
-# process_tims_day('2019-01-04')
+# process_tims_day('2019-07-04')
 # TODO: uncomment if processing data
-process_tims_month(2019, 1)
+process_tims_month(2019, 7)
 
+
+# -
+
+# Normalize Webtris and merge with TIMS data for a single merged volume file.
 
 # +
-# TODO: merge with webtris 'webtris_london_201907-202001.parquet' for all counters file
+def merge_london(month):
+    webtris_normalized_df = pd.read_parquet(LONDON_PATH / 'speed' / 'webtris_london_201907-202001.parquet')
+    webtris_normalized_df = webtris_normalized_df[webtris_normalized_df['day'].str.startswith(month)]
+    webtris_normalized_df = process_volume_normalization(webtris_normalized_df)
+    webtris_normalized_df = webtris_normalized_df[['id', 'lat', 'lon', 'heading', 'day', 'volume']]
+    
+    tims_normalized_df = pd.read_parquet(LONDON_PATH / 'flow' / f'counters_tims_{month}.parquet')
+    tims_normalized_df = tims_normalized_df[tims_normalized_df['day'].str.startswith(month)]
+    tims_normalized_df['heading'] = -1
+    tims_normalized_df = process_volume_normalization(tims_normalized_df)
+    tims_normalized_df = tims_normalized_df[['id', 'lat', 'lon', 'heading', 'day', 'volume']]
+    
+    london_normalized_df = pd.concat([webtris_normalized_df, tims_normalized_df])
+    london_normalized_df.to_parquet(LONDON_PATH / f'counters_london_normalized_{month}', compression="snappy")
+    return london_normalized_df
+
+london_normalized_df = merge_london('2019-07')
+london_normalized_df
+
+
 # -
 
 # # Madrid
@@ -757,6 +785,18 @@ def process_madrid_month(month, output_path):
 # process_madrid_month('2021-11', MADRID_PATH)
 # process_madrid_month('2021-12', MADRID_PATH)
 # -
+
+m30_madrid_df = pd.concat([
+    pd.read_parquet(MADRID_PATH / 'all' / 'counters_2021-06.parquet', filters=[('type','=','M30')]),
+    pd.read_parquet(MADRID_PATH / 'all' / 'counters_2021-07.parquet', filters=[('type','=','M30')]),
+    pd.read_parquet(MADRID_PATH / 'all' / 'counters_2021-08.parquet', filters=[('type','=','M30')]),
+    pd.read_parquet(MADRID_PATH / 'all' / 'counters_2021-09.parquet', filters=[('type','=','M30')]),
+    pd.read_parquet(MADRID_PATH / 'all' / 'counters_2021-10.parquet', filters=[('type','=','M30')]),
+    pd.read_parquet(MADRID_PATH / 'all' / 'counters_2021-11.parquet', filters=[('type','=','M30')]),
+    pd.read_parquet(MADRID_PATH / 'all' / 'counters_2021-12.parquet', filters=[('type','=','M30')])
+])
+m30_madrid_df.to_parquet(MADRID_PATH / 'm30_madrid_202106-202112.parquet', compression="snappy")
+m30_madrid_df
 
 # # Melbourne (additional data, currently not used for validations)
 #
