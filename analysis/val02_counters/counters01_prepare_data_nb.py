@@ -486,7 +486,7 @@ def merge_london(month):
     tims_normalized_df = tims_normalized_df[['id', 'lat', 'lon', 'heading', 'day', 'volume']]
     
     london_normalized_df = pd.concat([webtris_normalized_df, tims_normalized_df])
-    london_normalized_df.to_parquet(LONDON_PATH / f'counters_london_normalized_{month}', compression="snappy")
+    london_normalized_df.to_parquet(LONDON_PATH / f'counters_normalized_{month}', compression="snappy")
     return london_normalized_df
 
 london_normalized_df = merge_london('2019-07')
@@ -784,8 +784,29 @@ def process_madrid_month(month, output_path):
 # process_madrid_month('2021-10', MADRID_PATH)
 # process_madrid_month('2021-11', MADRID_PATH)
 # process_madrid_month('2021-12', MADRID_PATH)
+
+# +
+def normalize_madrid(month):
+    df = pd.read_parquet(MADRID_PATH / 'all' / f'counters_{month}.parquet')
+    df['t'] = [t_from_time_bin(tb, False) for tb in df['time_bin']]
+    df['day'] = [day_from_time_bin(tb, False) for tb in df['time_bin']]
+    df = df[df['day'].str.startswith(month)]
+    df = process_volume_normalization(df)
+    df = df[['id', 'lat', 'lon', 'heading', 'day', 'volume']]
+    df.to_parquet(MADRID_PATH / f'counters_normalized_{month}', compression="snappy")
+    return df
+
+# TODO: uncomment if processing data
+normalize_madrid('2021-06')
+# normalize_madrid('2021-07')
+# normalize_madrid('2021-08')
+# normalize_madrid('2021-09')
+# normalize_madrid('2021-10')
+# normalize_madrid('2021-11')
+# normalize_madrid('2021-12')
 # -
 
+# TODO: uncomment if processing data
 m30_madrid_df = pd.concat([
     pd.read_parquet(MADRID_PATH / 'all' / 'counters_2021-06.parquet', filters=[('type','=','M30')]),
     pd.read_parquet(MADRID_PATH / 'all' / 'counters_2021-07.parquet', filters=[('type','=','M30')]),
