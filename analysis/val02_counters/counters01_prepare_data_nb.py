@@ -793,7 +793,7 @@ def normalize_madrid(month):
     df = df[df['day'].str.startswith(month)]
     df = process_volume_normalization(df)
     df = df[['id', 'lat', 'lon', 'heading', 'day', 'volume']]
-    df.to_parquet(MADRID_PATH / f'counters_normalized_{month}', compression="snappy")
+    df.to_parquet(MADRID_PATH / f'counters_normalized_{month}.parquet', compression="snappy")
     return df
 
 # TODO: uncomment if processing data
@@ -873,7 +873,7 @@ def read_vsdata_site_ids(zip_file, locations_df):
     print(f'Read {len(all_site_ids)} unique locations')
     return list(all_site_ids)
 
-melbourne_site_ids = read_vsdata_site_ids(MELBOURNE_PATH / 'downloads' / 'VSDATA_202006.zip', melbourne_locations)
+melbourne_site_ids = read_vsdata_site_ids(MELBOURNE_PATH / 'downloads' / 'VSDATA_202006.zip')
 
 # +
 # Filter only the used counter locations in the bounding box
@@ -887,3 +887,85 @@ melbourne_locations
 
 # Store the counter locations to geojson
 get_gdf(melbourne_locations, 'SITE_NO').to_file(MELBOURNE_PATH / 'counter_locations.geojson', driver="GeoJSON")
+
+
+# +
+def process_vsdata(year, month, locations_df):
+    unique_sites = set(locations_df['SITE_NO'].values)
+    zip_file = MELBOURNE_PATH / 'downloads' / f'VSDATA_{year:04d}{month:02d}.zip'
+    count = 0
+    data = []
+    cfa = zipfile.ZipFile(zip_file, 'r')
+    for csv_file in cfa.namelist():
+        day_bin = csv_file[7:15]
+        day_bin = f'{day_bin[:4]}-{day_bin[4:6]}-{day_bin[6:]}'
+        f = cfa.open(csv_file, 'r')
+        csvreader = csv.reader(TextIOWrapper(f, 'utf-8'), delimiter=',')
+        header = next(csvreader)
+        for row in csvreader:
+            try:
+                nb_scats_site = int(row[0])
+                nb_detector = int(row[2])
+                volumes = [int(row[i]) for i in range(3,99)]
+            except Exception:
+                continue
+            if not np.any(np.array(volumes)):
+                continue
+            if nb_scats_site not in unique_sites:
+                continue
+            site_df = locations_df[locations_df['SITE_NO'] == nb_scats_site]
+            point = site_df['geometry'].iloc[0]
+            lat = point.y
+            lon = point.x
+            volumes = [max(v, 0) for v in volumes]
+            heading = -1
+            data.append({
+                'id': nb_scats_site, 'sub_id': nb_detector, 'lat': lat, 'lon': lon, 'heading': heading, 
+                'day': day_bin, 'volume': volumes
+            })
+            count += 1
+            if count % 20000 == 0:
+                print(f'{day_bin}: {count}')
+    df = pd.DataFrame.from_records(data)
+    df.to_parquet(MELBOURNE_PATH / f'counters_{year:04d}-{month:02d}.parquet', compression="snappy")
+    return df
+
+# TODO: uncomment if processing data
+process_vsdata(2020, 6, melbourne_locations)
+# process_vsdata(2020, 7, melbourne_locations)
+# process_vsdata(2020, 8, melbourne_locations)
+# process_vsdata(2020, 9, melbourne_locations)
+# process_vsdata(2020, 10, melbourne_locations)
+# process_vsdata(2020, 11, melbourne_locations)
+# process_vsdata(2020, 12, melbourne_locations)
+
+# +
+def normalize_volumes_melbourne(x):
+    volumes = x.volume
+    sub_ids = x.sub_id
+    assert(len(volumes) == len(sub_ids))
+    res_volumes = []
+    for v in volumes:
+        if len(res_volumes) == 0:
+            res_volumes = v
+        else:
+            res_volumes = np.add(res_volumes, v)
+    assert(len(res_volumes) == 96)
+    return pd.Series([res_volumes], index=['volume'])
+
+def normalize_melbourne(month):
+    df = pd.read_parquet(MELBOURNE_PATH / f'counters_{month}.parquet')
+    df = df.sort_values(['id','lat','lon','heading'], ascending=False).groupby(
+        ['id','lat','lon','heading', 'day']).agg({'volume':lambda x: list(x), 'sub_id':lambda x: list(x)})
+    df = df.apply(normalize_volumes_melbourne, axis=1, result_type='expand').reset_index()
+    df.to_parquet(MELBOURNE_PATH / f'counters_normalized_{month}.parquet', compression="snappy")
+    return df
+
+# TODO: uncomment if processing data
+normalize_melbourne('2020-06')
+# normalize_melbourne('2020-07')
+# normalize_melbourne('2020-08')
+# normalize_melbourne('2020-09')
+# normalize_melbourne('2020-10')
+# normalize_melbourne('2020-11')
+# normalize_melbourne('2020-12')
