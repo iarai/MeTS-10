@@ -19,6 +19,7 @@ dependencies:
       - notebook==6.4.12
       - ipywidgets==7.7.1
       - jupytext
+      - scikit-learn
       - seaborn==0.12.1
       - folium
       - boto3
