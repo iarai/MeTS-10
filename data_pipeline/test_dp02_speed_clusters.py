@@ -12,12 +12,11 @@ import tempfile
 from pathlib import Path
 
 import dp02_speed_clusters
+import dummy_competition_setup_for_testing
 import numpy as np
 from dp02_speed_clusters import main
+from dummy_competition_setup_for_testing import create_dummy_competition_setup
 from h5_helpers import load_h5_file
-
-import t4c22
-from t4c22.misc.dummy_competition_setup_for_testing import create_dummy_competition_setup
 
 
 def test_speed_clusters():
@@ -25,9 +24,9 @@ def test_speed_clusters():
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_dir = Path(tmp_dir)
 
-        dp02_speed_clusters.NUM_SLOTS = t4c22.misc.dummy_competition_setup_for_testing.NUM_SLOTS_AGGREGATED
-        dp02_speed_clusters.NUM_ROWS = t4c22.misc.dummy_competition_setup_for_testing.NUM_ROWS
-        dp02_speed_clusters.NUM_COLUMNS = t4c22.misc.dummy_competition_setup_for_testing.NUM_COLUMNS
+        dp02_speed_clusters.NUM_SLOTS = dummy_competition_setup_for_testing.NUM_SLOTS_AGGREGATED
+        dp02_speed_clusters.NUM_ROWS = dummy_competition_setup_for_testing.NUM_ROWS
+        dp02_speed_clusters.NUM_COLUMNS = dummy_competition_setup_for_testing.NUM_COLUMNS
 
         create_dummy_competition_setup(basedir=tmp_dir, city="london", skip_train_labels=True, train_dates=dates, skip_movie_15min=False)
         for date in dates:
@@ -43,8 +42,8 @@ def test_speed_clusters():
         assert speed_clusters_h5.exists()
         speed_clusters_data = load_h5_file(speed_clusters_h5)
         assert speed_clusters_data.shape == (
-            t4c22.misc.dummy_competition_setup_for_testing.NUM_ROWS,
-            t4c22.misc.dummy_competition_setup_for_testing.NUM_COLUMNS,
+            dummy_competition_setup_for_testing.NUM_ROWS,
+            dummy_competition_setup_for_testing.NUM_COLUMNS,
             4,
             5,
             2,
@@ -61,10 +60,10 @@ def test_speed_clusters():
         assert heatmap_h5.exists()
         heatmap_data = load_h5_file(heatmap_h5)
         assert heatmap_data.shape == (
-            t4c22.misc.dummy_competition_setup_for_testing.NUM_ROWS,
-            t4c22.misc.dummy_competition_setup_for_testing.NUM_COLUMNS,
+            dummy_competition_setup_for_testing.NUM_ROWS,
+            dummy_competition_setup_for_testing.NUM_COLUMNS,
             4,
         ), heatmap_data.shape
         assert heatmap_data.dtype == np.float64, heatmap_data.dtype
         assert 0 <= heatmap_data.min() < 256, heatmap_data.min()
-        assert 1 <= heatmap_data.max() < (256 * t4c22.misc.dummy_competition_setup_for_testing.NUM_SLOTS_AGGREGATED), heatmap_data.max()
+        assert 1 <= heatmap_data.max() < (256 * dummy_competition_setup_for_testing.NUM_SLOTS_AGGREGATED), heatmap_data.max()
