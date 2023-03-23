@@ -67,7 +67,7 @@ DATA_PATH = Path('/private/data/mets10')
 BERLIN_PATH = DATA_PATH / 'loop_counters' / 'berlin'
 LONDON_PATH = DATA_PATH / 'loop_counters' / 'london'
 MADRID_PATH = DATA_PATH / 'loop_counters' / 'madrid'
-MELBOURNE_PATH = DATA_PATH / 'loop_counters' / 'melbourne'  # not used for the validations (no time overlap)
+MELBOURNE_PATH = DATA_PATH / 'loop_counters' / 'melbourne'  # not used for MeTS-10 validations (no time overlap)
 
 
 # -
@@ -313,7 +313,7 @@ def read_tims_csv_file(csv_file):
     response = s3_client.get_object(Bucket=bucket, Key=csv_file)
     return pd.read_csv(response.get("Body"))
 
-def read_tims_day(day, debug=False, all_fields=False):
+def read_tims_day(day):
     ts = datetime.strptime(day, '%Y-%m-%d')
     tims_day_file = LONDON_PATH / 'downloads' /  f'tims_{day}.parquet'
     if os.path.exists(tims_day_file):
@@ -349,15 +349,20 @@ def get_projected_point(r):
     return en2ll(float(r['EASTING']), float(r['NORTHING']))
 
 def get_tims_locations(df):
-    df['id'] = tims_df['NODE']
+    df['id'] = df['NODE']
+    print(f'Aggregating {len(df)} tims rows')
     df = df[['id', 'EASTING', 'NORTHING']].groupby(['id', 'EASTING', 'NORTHING']).min().reset_index()
+    print(f'Found {len(df)} unique locations')
     df['geometry'] = df.apply(get_projected_point, axis=1)
     df = geopandas.GeoDataFrame(df, geometry='geometry')
     df['lon'] = df.geometry.x
     df['lat'] = df.geometry.y
     return df[['id', 'lat', 'lon']]
 
-tims_locations = get_tims_locations(tims_df) 
+# Reading locations from different months to capture newly added or relevant temporary locations.
+tims_locations = get_tims_locations(pd.concat([
+    read_tims_day('2019-01-04'),  read_tims_day('2019-07-20'), read_tims_day('2020-02-10')
+])) 
 tims_locations
 # -
 
@@ -819,7 +824,7 @@ m30_madrid_df = pd.concat([
 m30_madrid_df.to_parquet(MADRID_PATH / 'm30_madrid_202106-202112.parquet', compression="snappy")
 m30_madrid_df
 
-# # Melbourne (additional data, currently not used for validations)
+# # Melbourne (additional data, not used for MeTS-10 validations)
 #
 # The raw files are getting downloaded from https://discover.data.vic.gov.au/dataset/traffic-signal-volume-data
 
