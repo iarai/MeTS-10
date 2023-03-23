@@ -21,14 +21,17 @@ Arguments:
   -d DATA_FOLDER, --data_folder DATA_FOLDER
                         Folder containing a subfolders road_graph/<city>
   -c city_name, --city city_name
-                        Name of the city to be processed
+                        Name of the city to be processed.
   -cf filter_string, --custom_filter filter_string
-                        Optional custom OSM filter string
+                        Optional custom OSM filter string.
   -pms, --parse_maxspeed
-                        Use the improved maxspeed parsing logic instead of the default OSMNX one
-                            parser.add_argument(
+                        Use the improved maxspeed parsing logic instead of the default OSMNX one.
   -kae, --keep_all_edges
-                        Disable simplification to keep all OSM segments as individual edges in the graph
+                        Disable simplification to keep all OSM segments as individual edges in the graph.
+  -hf, --heatmap_filter
+                        Use the heatmap to filter roads with too low volume.
+  -cn, --counter_nodes GEOJSON_FILE
+                        Use the points in this .geojson files as counters to be merged with the road graph.
   -of, --osm_file OSM_FILE
                         Use this .osm file instead of download. City bounding box will be applied on this.
   -cbb, --custom_bounding_box NORTH,SOUTH,ESAST,WEST
@@ -54,6 +57,8 @@ import osmnx.graph
 import osmnx.truncate
 from data_helpers import get_latlon_bounds
 from osmnx.io import utils_graph
+from road_graph_helpers import process_counter_merge
+from road_graph_helpers import process_heatmap_filter
 from shapely import wkb
 
 # The following default max speeds are used when the parse_maxspeed option is used
@@ -101,13 +106,16 @@ def gkey_hash(b: bytes):
     return int.from_bytes(h, "big")
 
 
-def process_road_graph(
+def process_road_graph(  # noqa: C901
     data_folder: Path,
     city: str,
     custom_filter: str,
     overwrite: bool = False,
     parse_maxspeed: bool = False,
     simplify: bool = True,
+    heatmap_filter: bool = True,
+    counter_nodes: Optional[Path] = None,
+    counter_split: bool = False,
     osm_file: Optional[Path] = None,
     bbox: Optional[Tuple[float, float, float, float]] = None,
 ):
@@ -117,7 +125,7 @@ def process_road_graph(
         return
     graph_file = city_road_graph_folder / "road_graph.graphml"
     if bbox is None:
-        bbox, _ = get_latlon_bounds(city)
+        bbox, rotate = get_latlon_bounds(city)
     south, north, west, east = bbox
     if graph_file.exists() and not overwrite:
         print(f"Loading road graph for {city} from {graph_file}")
@@ -135,8 +143,17 @@ def process_road_graph(
             g = ox.graph_from_bbox(north, south, east, west, network_type="drive", simplify=False, truncate_by_edge=True, custom_filter=custom_filter)
         # impute edge (driving) speeds and calculate edge traversal times
         g = ox.add_edge_speeds(g)  # We do not use hwy_speeds here but instead the custom get_maxspeed logic if requested.
+        g = ox.add_edge_travel_times(g)
         ox.save_graphml(g, filepath=graph_file)
     print(f"Road graph for {city} is {g} in {graph_file}")
+
+    if counter_nodes is not None:
+        g = process_counter_merge(g, counter_nodes, assign_all_neighbors=counter_split)
+
+    if heatmap_filter:
+        g = process_heatmap_filter(g, data_folder / "movie_heatmap" / city / "probe_heatmap.h5", rotate=rotate, lon_min=west, lat_min=south)
+        print(f"Filtered road graph for {city} is {g}")
+
     if simplify and ("simplified" not in g.graph or not g.graph["simplified"]):
         g = ox.simplify_graph(g)
         print(f"Simplified road graph for {city} is {g}")
@@ -256,6 +273,15 @@ def create_parser() -> argparse.ArgumentParser:
         "-kae", "--keep_all_edges", help="Disable simplification to keep all OSM segments as individual edges in the graph", required=False, action="store_true"
     )
     parser.add_argument("-f", "--force_overwrite", help="Force overwriting existing files", required=False, action="store_true")
+    parser.add_argument("-hf", "--heatmap_filter", help="Use the heatmap to filter roads with too low volume.", required=False, action="store_true")
+    parser.add_argument(
+        "-cn",
+        "--counter_nodes",
+        type=Path,
+        help="Use the points in this .geojson files as counters to be merged with the road graph.",
+        required=False,
+    )
+    parser.add_argument("-cns", "--counter_split", help="Assign counters to all neighbouring nodes in a junction.", required=False, action="store_true")
     parser.add_argument(
         "-of",
         "--osm_file",
@@ -286,6 +312,9 @@ def main(argv):
         custom_filter = params["custom_filter"]
         parse_maxspeed = params["parse_maxspeed"]
         overwrite = params["force_overwrite"]
+        heatmap_filter = params["heatmap_filter"]
+        counter_nodes = params["counter_nodes"]
+        counter_split = params["counter_split"]
         osm_file = params["osm_file"]
         simplify = not params["keep_all_edges"]
         custom_bounding_box = params["custom_bounding_box"]
@@ -305,8 +334,11 @@ def main(argv):
         city=city,
         custom_filter=custom_filter,
         overwrite=overwrite,
+        heatmap_filter=heatmap_filter,
         parse_maxspeed=parse_maxspeed,
         simplify=simplify,
+        counter_nodes=counter_nodes,
+        counter_split=counter_split,
         osm_file=osm_file,
         bbox=custom_bounding_box,
     )

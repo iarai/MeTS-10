@@ -55,19 +55,8 @@ NUM_ROWS = 495
 NUM_COLUMNS = 436
 
 
-def create_clusters(data_folder: Path, city: str, num_inputs=20, min_num_speeds=10):
-    files_15min = list((data_folder / "movie_15min" / city).glob("*_8ch_15min.h5"))
-    if not files_15min:
-        print(f'Found no input files in {(data_folder / "movie_15min" / city)}')
-        return None
-    files_15min = sample(files_15min, min(num_inputs, len(files_15min)))
-    data_days = np.full((len(files_15min) * NUM_SLOTS, NUM_ROWS, NUM_COLUMNS, 8), np.nan, dtype=float)
-    for i, file_name in enumerate(files_15min):
-        data = load_h5_file(file_name)
-        date = re.search(r"([0-9]{4}-[0-9]{2}-[0-9]{2})", str(file_name)).group(1)
-        print(f"{date} values > 0: {(data > 0).sum()}")
-        data_days[i * NUM_SLOTS : i * NUM_SLOTS + NUM_SLOTS] = data
-    print(f"Total values > 0: {(data_days > 0).sum()}")
+# +
+def compute_clusters(data_days, min_num_speeds=10):
     progress = 0
     speed_clusters = np.zeros(shape=(NUM_ROWS, NUM_COLUMNS, 4, 5, 2))
     for s, si in zip([1, 3, 5, 7], [0, 1, 2, 3]):
@@ -86,18 +75,48 @@ def create_clusters(data_folder: Path, city: str, num_inputs=20, min_num_speeds=
                 cluts = ckmeans(speeds, 5)
                 ccents = [[np.median(c), len(c)] for c in cluts]
                 speed_clusters[y][x][si] = ccents
-    output_fn = data_folder / "movie_speed_clusters" / city / "speed_clusters.h5"
-    output_fn.parent.mkdir(exist_ok=True, parents=True)
-    write_data_to_h5(speed_clusters, output_fn, dtype=np.float64)
     return speed_clusters
 
 
-def generate_speed_clusters(data_folder: Path, city: str, num_inputs=20, resume=False):
+def compute_heatmap(data_days):
+    heatmap = np.sum(data_days[:, :, :, [0, 2, 4, 6]], axis=0)
+    heatmap = heatmap / (data_days.shape[0] / NUM_SLOTS)
+    return heatmap
+
+
+def create_clusters_and_heatmap(data_folder: Path, city: str, num_inputs=20, min_num_speeds=10):
+    files_15min = list((data_folder / "movie_15min" / city).glob("*_8ch_15min.h5"))
+    if not files_15min:
+        print(f'Found no input files in {(data_folder / "movie_15min" / city)}')
+        return None
+    files_15min = sample(files_15min, min(num_inputs, len(files_15min)))
+    data_days = np.full((len(files_15min) * NUM_SLOTS, NUM_ROWS, NUM_COLUMNS, 8), np.nan, dtype=float)
+    for i, file_name in enumerate(files_15min):
+        data = load_h5_file(file_name)
+        date = re.search(r"([0-9]{4}-[0-9]{2}-[0-9]{2})", str(file_name)).group(1)
+        print(f"{date} values > 0: {(data > 0).sum()}")
+        data_days[i * NUM_SLOTS : i * NUM_SLOTS + NUM_SLOTS] = data
+    print(f"Total values > 0: {(data_days > 0).sum()}")
+    output_fn = data_folder / "movie_speed_clusters" / city / "speed_clusters.h5"
+    output_fn.parent.mkdir(exist_ok=True, parents=True)
+    speed_clusters = compute_clusters(data_days, min_num_speeds=min_num_speeds)
+    write_data_to_h5(speed_clusters, output_fn, dtype=np.float64)
+    output_fn = data_folder / "movie_heatmap" / city / "probe_heatmap.h5"
+    output_fn.parent.mkdir(exist_ok=True, parents=True)
+    heatmap = compute_heatmap(data_days)
+    write_data_to_h5(heatmap, output_fn, dtype=np.float64)
+    return speed_clusters, heatmap
+
+
+# -
+
+
+def generate_speed_clusters_and_heatmap(data_folder: Path, city: str, num_inputs=20, resume=False):
     if resume and (data_folder / "movie_speed_clusters" / city / "speed_clusters.h5").exists():
         print(f"Speed clusters file for {city} exists already. Skipping ...")
         return
-    create_clusters(data_folder, city, num_inputs)
-    print("... finished creating speed clusters.")
+    create_clusters_and_heatmap(data_folder, city, num_inputs)
+    print("... finished creating speed clusters and heatmap.")
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -145,7 +164,7 @@ def main(argv):
         logging.exception(f"Could not parse args.", exc_info=e)
         parser.print_help()
         exit(1)
-    generate_speed_clusters(data_folder, city=city, num_inputs=num_inputs, resume=resume)
+    generate_speed_clusters_and_heatmap(data_folder, city=city, num_inputs=num_inputs, resume=resume)
 
 
 if __name__ == "__main__":
