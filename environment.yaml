@@ -12,6 +12,7 @@ dependencies:
       - h5py
       - shapely
       - geographiclib
+      - geojson
       - geopandas
       - osmnx
       - openpyxl
