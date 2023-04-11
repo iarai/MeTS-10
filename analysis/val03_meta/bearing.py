@@ -90,16 +90,16 @@ if __name__ == "__main__":
     # RELEASE = "release20220930" #noqa
 
     d = {
-        # "2021": [
-        #     "antwerp",
-        #     "bangkok",
-        #     "barcelona",
-        #     "berlin",
-        #     "chicago",
-        #     "istanbul",
-        #     "melbourne",
-        #     "moscow",
-        # ],
+        "2021": [
+            "antwerp",
+            "bangkok",
+            "barcelona",
+            "berlin",
+            "chicago",
+            "istanbul",
+            "melbourne",
+            "moscow",
+        ],
         "2022": ["london", "madrid", "melbourne"],
     }
     for YEAR, CITIES in d.items():
