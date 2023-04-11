@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import geopandas as gpd
+import pandas as pd
 from shapely import LineString
 
 from data_pipeline.data_helpers import get_bearing
@@ -8,7 +9,8 @@ from data_pipeline.data_helpers import get_bearing
 MARGIN = 10
 
 
-def main(DATA_ROOT: Path, RELEASE: str, YEAR: str, CITY: str):
+def main(DATA_ROOT: Path, RELEASE: str, YEAR: str, CITY: str, NUM_SPEED_FILES: int = 10):
+
     print(f"{DATA_ROOT}/{RELEASE}/{YEAR}/{CITY}")
 
     gdf_edges = gpd.read_parquet(DATA_ROOT / RELEASE / YEAR / "road_graph" / CITY / "road_graph_edges.parquet")
@@ -53,7 +55,30 @@ def main(DATA_ROOT: Path, RELEASE: str, YEAR: str, CITY: str):
     gdf_edges["diagonal"] = diagonal
     gdf_edges["horizontal_vertical"] = horizontal_vertical
 
+    #
+    speed_files = list((DATA_ROOT / RELEASE / YEAR / "speed_classes" / CITY).rglob("speed_classes_*.parquet"))
+    dfs = []
+    for f in speed_files[:NUM_SPEED_FILES]:
+        df = pd.read_parquet(f)
+        dfs.append(df)
+    df_speeds = pd.concat(dfs)
+    df_speeds = df_speeds.merge(
+        gdf_edges,
+        on=[
+            "u",
+            "v",
+            # TODO
+            # "gkey"
+        ],
+    )
+
     # TODO merge with data (1): coverage
+    num_data_points_diagonal = len(df_speeds[df_speeds["diagonal"]])
+    num_data_points_horizontal_vertical = len(df_speeds[df_speeds["horizontal_vertical"]])
+
+    print(f"coverage diagonal {num_data_points_diagonal/(num_diagonals * NUM_SPEED_FILES * 24 * 4)}")
+    print(f"coverage horizontal_vertical {num_data_points_horizontal_vertical/(num_horizontal_verticals * NUM_SPEED_FILES * 24 * 4)}")
+
     # TODO merge with data (2): mapped volume
 
 
@@ -61,51 +86,22 @@ if __name__ == "__main__":
 
     DATA_ROOT = Path("/iarai/public/t4c/data_pipeline/")
     RELEASE = "release20221026_residential_unclassified"
+    # TODO remove
+    # RELEASE = "release20220930" #noqa
 
     d = {
-        "2021": [
-            "antwerp",
-            "bangkok",
-            "barcelona",
-            "berlin",
-            "chicago",
-            "istanbul",
-            "melbourne",
-            "moscow",
-        ],
+        # "2021": [
+        #     "antwerp",
+        #     "bangkok",
+        #     "barcelona",
+        #     "berlin",
+        #     "chicago",
+        #     "istanbul",
+        #     "melbourne",
+        #     "moscow",
+        # ],
         "2022": ["london", "madrid", "melbourne"],
     }
     for YEAR, CITIES in d.items():
         for CITY in CITIES:
             main(DATA_ROOT=DATA_ROOT, RELEASE=RELEASE, YEAR=YEAR, CITY=CITY)
-
-# /iarai/public/t4c/data_pipeline/release20221026_residential_unclassified/2021/bangkok
-# num_diagonals=91609 (13.18%)
-# num_horizontal_verticals=201316 (28.97%)
-# /iarai/public/t4c/data_pipeline/release20221026_residential_unclassified/2021/barcelona
-# num_diagonals=34724 (29.23%)
-# num_horizontal_verticals=22003 (18.52%)
-# /iarai/public/t4c/data_pipeline/release20221026_residential_unclassified/2021/berlin
-# num_diagonals=19940 (22.43%)
-# num_horizontal_verticals=20875 (23.49%)
-# /iarai/public/t4c/data_pipeline/release20221026_residential_unclassified/2021/chicago
-# num_diagonals=9399 (5.01%)
-# num_horizontal_verticals=118970 (63.43%)
-# /iarai/public/t4c/data_pipeline/release20221026_residential_unclassified/2021/istanbul
-# num_diagonals=61564 (22.79%)
-# num_horizontal_verticals=61255 (22.68%)
-# /iarai/public/t4c/data_pipeline/release20221026_residential_unclassified/2021/melbourne
-# num_diagonals=31915 (13.84%)
-# num_horizontal_verticals=103833 (45.02%)
-# /iarai/public/t4c/data_pipeline/release20221026_residential_unclassified/2021/moscow
-# num_diagonals=13259 (27.69%)
-# num_horizontal_verticals=10177 (21.26%)
-# /iarai/public/t4c/data_pipeline/release20221026_residential_unclassified/2022/london
-# num_diagonals=65380 (24.12%)
-# num_horizontal_verticals=59654 (22.01%)
-# /iarai/public/t4c/data_pipeline/release20221026_residential_unclassified/2022/madrid
-# num_diagonals=35551 (24.79%)
-# num_horizontal_verticals=32018 (22.33%)
-# /iarai/public/t4c/data_pipeline/release20221026_residential_unclassified/2022/melbourne
-# num_diagonals=31915 (13.84%)
-# num_horizontal_verticals=103833 (45.02%)
