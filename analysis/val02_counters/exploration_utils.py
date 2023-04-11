@@ -111,21 +111,21 @@ def inspect_diff_area(df, xmin, xmax, ymin, ymax, xfield='speed_probes', yfield=
     return unique_locations
 
 
-def plot_kde_scatter(df, ax, city=None, labelsize=24, titlesize=36):
+def plot_kde_scatter(df, ax, city=None, labelsize=24, titlesize=36, x_field='speed_probes', x_label='MeTS-10 Speed [km/h]'):
     ax.plot([0, 130], [0, 130], ls="--", c=".3")
     ax.set_xlim([0,130])
     ax.set_ylim([0,130])
-    sns.kdeplot(data=df, x='speed_probes', y='speed_counter', fill=True, levels=10, ax=ax)
+    sns.kdeplot(data=df, x=x_field, y='speed_counter', fill=True, levels=10, ax=ax)
     if city:
-        ax.set_xlabel(f'MeTS-10 Speed [km/h]', fontsize=titlesize)
-        ax.set_ylabel('Detector Speed [km/h]', fontsize=titlesize)
+        ax.set_xlabel(x_label, fontsize=labelsize)
+        ax.set_ylabel('Detector Speed [km/h]', fontsize=labelsize)
         ax.tick_params(axis='x', which='major', labelsize=labelsize)
         ax.tick_params(axis='y', which='major', labelsize=labelsize)
         ax.title.set_text(city)
         ax.title.set_size(titlesize)
 
 
-def plot_scatters(df, t_from=None, t_to=None, title=None):
+def plot_scatters(df, t_from=None, t_to=None, title=None, x_field='speed_probes'):
     if t_from and t_to:
         df = df[(df['t'] >= t_from) & (df['t'] < t_to)]
     fig, axs = plt.subplots(1, 2, tight_layout=True, figsize=(20,10))
@@ -137,7 +137,7 @@ def plot_scatters(df, t_from=None, t_to=None, title=None):
     ax.plot([0, 130], [0, 130], ls="--", c=".3")
     ax.set_xlim([0,130])
     ax.set_ylim([0,130])
-    df.plot(x='speed_probes', y='speed_counter', kind='scatter', ax=ax)
+    df.plot(x=x_field, y='speed_counter', kind='scatter', ax=ax)
 
 
 def plot_speed_dayline(df, id, x_field="t", plot_volume=False, figsize=(16,6), labels={}, labelsize=12, ax=None):
