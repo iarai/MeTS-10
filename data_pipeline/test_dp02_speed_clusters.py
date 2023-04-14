@@ -34,6 +34,8 @@ def test_speed_clusters():
 
         speed_clusters_h5 = tmp_dir / "movie_speed_clusters" / "london" / f"speed_clusters.h5"
         assert not speed_clusters_h5.exists()
+        heatmap_h5 = tmp_dir / "movie_heatmap" / "london" / f"probe_heatmap.h5"
+        assert not heatmap_h5.exists()
 
         main(["-d", str(tmp_dir), "-c", "london", "-n", "3"])
 
@@ -54,3 +56,14 @@ def test_speed_clusters():
             assert cluster_speed > prev_cluster_speed
             prev_cluster_speed = cluster_speed
             assert cluster_vol > 0
+
+        assert heatmap_h5.exists()
+        heatmap_data = load_h5_file(heatmap_h5)
+        assert heatmap_data.shape == (
+            dummy_competition_setup_for_testing.NUM_ROWS,
+            dummy_competition_setup_for_testing.NUM_COLUMNS,
+            4,
+        ), heatmap_data.shape
+        assert heatmap_data.dtype == np.float64, heatmap_data.dtype
+        assert 0 <= heatmap_data.min() < 256, heatmap_data.min()
+        assert 1 <= heatmap_data.max() < (256 * dummy_competition_setup_for_testing.NUM_SLOTS_AGGREGATED), heatmap_data.max()
