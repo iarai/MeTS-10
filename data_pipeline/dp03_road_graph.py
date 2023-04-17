@@ -323,7 +323,7 @@ def main(argv):
             assert isinstance(custom_bounding_box, tuple), f"Bounding box must be given as tuple, found {type(custom_bounding_box)} in {custom_bounding_box}"
             assert len(custom_bounding_box) == 4, f"Bounding box must contain 4 values, found {len(custom_bounding_box)} in {custom_bounding_box}"
             assert all(
-                [isinstance(b, numbers.Number) for b in custom_bounding_box]
+                isinstance(b, numbers.Number) for b in custom_bounding_box
             ), f"Bounding box must contain only number, found {[type(b) for b in custom_bounding_box]} in {custom_bounding_box}"
     except Exception as e:
         logging.exception(f"Could not parse args.", exc_info=e)
