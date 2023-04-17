@@ -23,6 +23,7 @@ dependencies:
       - seaborn==0.12.1
       - folium
       - boto3
+      - humanize
 
       #====================================================
       # (2) LOCAL DEV + CI DEPENDENCIES
