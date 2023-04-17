@@ -80,6 +80,19 @@ simplified_filter = lambda hw: hw in [
     "tertiary_link",
 ]
 
+simplified_filter_wo_links = lambda hw: hw in [
+    "motorway",
+    #     "motorway_link",
+    "trunk",
+    #     "trunk_link",
+    "primary",
+    #     "primary_link",
+    "secondary",
+    #     "secondary_link",
+    "tertiary",
+    #     "tertiary_link",
+]
+
 
 def osm_color_palette():
     for c in ["#e892a2", "#e892a2", "#f9b29c", "#f9b29c", "#fcd6a4", "#fcd6a4", "#f7fabf", "#f7fabf"] + ["white"] * 99:
@@ -372,20 +385,6 @@ def get_size(l):
 
 ut_merged["size"] = [get_size(l) for l in ut_merged["length_meters"]]
 
-simplified_filter_wo_links = lambda hw: hw in [
-    "motorway",
-    #     "motorway_link",
-    "trunk",
-    #     "trunk_link",
-    "primary",
-    #     "primary_link",
-    "secondary",
-    #     "secondary_link",
-    "tertiary",
-    #     "tertiary_link",
-]
-
-
 ut_merged[[simplified_filter(hw) for hw in ut_merged["highway"]]].groupby(["highway", "size"]).mean()["ape"]
 
 # +
@@ -520,8 +519,8 @@ ax.set_yticks([10 * t for t in range(12)], minor=True)
 ax.tick_params(axis="y", which="minor", labelsize=25)
 ax.grid(axis="y", which="both")
 ax.set(xlabel="road type (highway)", ylabel="number of segments [-]")
-ax.bar_label(container=ax.containers[0], labels=[int(f) for f in ax.containers[0].datavalues], size=20)
-ax.bar_label(container=ax.containers[1], labels=[int(f) for f in ax.containers[1].datavalues], size=20)
+ax.bar_label(container=ax.containers[0], labels=[f"{f:.0f}" for f in ax.containers[0].datavalues], size=20)
+ax.bar_label(container=ax.containers[1], labels=[f"{f:.0f}" for f in ax.containers[1].datavalues], size=20)
 plt.savefig(f"{CITY.title()}_Uber_segment_counts_complex_non_complex.pdf")
 
 # ## APE complex vs. non-complex
@@ -582,8 +581,6 @@ plt.savefig(f"{CITY.title()}_Uber_ape_complex.pdf")
 ut_merged[~ut_merged["is_complex"]].groupby(["highway", "size"]).mean()["ape"]
 
 ut_merged[ut_merged["is_complex"]].groupby(["highway", "size"]).mean()["ape"]
-
-raise
 
 df_edges[df_edges["u"] == 3240063179]
 
