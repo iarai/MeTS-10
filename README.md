@@ -76,3 +76,4 @@ Please cite this repo along with the pre-print:
   copyright = {arXiv.org perpetual, non-exclusive license}
 }
 ```
+[Supplementar Material (revision 2023-04-20)](SupplementaryMaterial.pdf)

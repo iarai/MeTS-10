@@ -210,7 +210,7 @@ cd -
 
 # "dp09": speed stats
 
-cd ~/workspaces/MCSWTS/dataset_description/
+cd ~/workspaces/MeTS-10/analysis/dataset_description/
 export RELEASE=release20221026_residential_unclassified
 rm -fR figures/speed_stats
 mkdir -p figures/speed_stats
@@ -232,7 +232,7 @@ python speed_stats.py -d ${DATA_ROOT}/${RELEASE}/2022 --city madrid --output_fol
 python speed_stats.py -d ${DATA_ROOT}/${RELEASE}/2022 --city melbourne --output_folder figures/speed_stats
 cd -
 
-cd ~/workspaces/MCSWTS/dataset_description/
+cd ~/workspaces/MeTS-10/analysis/dataset_description/
 export RELEASE="release20221028_historic_uber"
 export DATA_ROOT="/iarai/public/t4c/data_pipeline/"
 rm -fR speed_stats_05_val01_uber
