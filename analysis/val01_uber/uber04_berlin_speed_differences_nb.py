@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.11.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -14,10 +14,12 @@
 # ---
 # +
 import ast
+from collections import defaultdict
 from pathlib import Path
 
 import folium
 import humanize
+import numpy as np
 import pandas
 import pandas as pd
 import seaborn as sns
@@ -83,6 +85,19 @@ simplified_filter = lambda hw: hw in [
     "secondary_link",
     "tertiary",
     "tertiary_link",
+]
+
+simplified_filter_wo_links = lambda hw: hw in [
+    "motorway",
+    #     "motorway_link",
+    "trunk",
+    #     "trunk_link",
+    "primary",
+    #     "primary_link",
+    "secondary",
+    #     "secondary_link",
+    "tertiary",
+    #     "tertiary_link",
 ]
 
 
@@ -326,6 +341,255 @@ plt.savefig(f"{CITY.title()}_Uber_speed_diff.pdf")
 tspeeds_df.columns
 
 
+# ## APE -- absolute percentage error
+
+ut_merged["ape"] = [abs(d) for d in ut_merged["speed_diff"]]
+ut_merged["ape"] = ut_merged["ape"] / ut_merged["speed_kph_mean"] * 100
+
+ut_merged["ape"].mean()
+
+ut_merged[[simplified_filter_wo_links(hw) for hw in ut_merged["highway"]]]["ape"].mean()
+
+ut_merged[[simplified_filter(hw) for hw in ut_merged["highway"]]]["ape"].median()
+
+# +
+fig, ax = plt.subplots(1, figsize=(20, 12), tight_layout=True)
+sns.boxplot(
+    ut_merged[[simplified_filter(hw) for hw in ut_merged["highway"]]],
+    x="highway",
+    y="ape",
+    notch=True,
+    sym="",
+    palette=osm_color_palette(),
+    medianprops={"color": "coral"},
+    showmeans=True,
+    meanprops={"marker": "x", "markeredgecolor": "blue", "markersize": "20"},
+    ax=ax,
+)
+
+ax.tick_params(axis="x", which="major", labelsize=32, rotation=45)
+ax.tick_params(axis="y", which="major", labelsize=32)
+ax.set_yticks([10 * t for t in range(12)], minor=True)
+ax.tick_params(axis="y", which="minor", labelsize=25)
+ax.grid(axis="y", which="both")
+ax.set(xlabel="road type (highway)", ylabel="absolute percentage error (MeTS-10 vs. Uber) [%]                   ")
+plt.savefig(f"{CITY.title()}_Uber_ape.pdf")
+
+
+# -
+
+# ## APE by size
+
+
+def get_size(l):
+    if l <= 100:
+        return "S (<=100m)"
+    elif l <= 500:
+        return "M (>100m,<=500m)"
+    else:
+        return "L (>500m)"
+
+
+ut_merged["size"] = [get_size(l) for l in ut_merged["length_meters"]]
+
+ut_merged[[simplified_filter(hw) for hw in ut_merged["highway"]]].groupby(["highway", "size"]).mean()["ape"]
+
+# +
+# fig, ax = plt.subplots(1, figsize=(20, 12), tight_layout=True)
+# sns.barplot(data=ut_merged[[simplified_filter(hw) for hw in ut_merged["highway"]]].groupby(["highway","size"]).mean().reset_index().sort_values("sort_key"),
+#            x="highway", y="ape", hue="size", ax=ax)
+
+fig, ax = plt.subplots(1, figsize=(20, 12), tight_layout=True)
+sns.boxplot(
+    data=ut_merged[[simplified_filter(hw) for hw in ut_merged["highway"]]],
+    x="highway",
+    y="ape",
+    notch=True,
+    sym="",
+    hue="size",
+    hue_order=["S (<=100m)", "M (>100m,<=500m)", "L (>500m)"],
+    # palette=osm_color_palette(),
+    medianprops={"color": "coral"},
+    showmeans=True,
+    meanprops={"marker": "x", "markeredgecolor": "blue", "markersize": "20"},
+    ax=ax,
+)
+ax.tick_params(axis="x", which="major", labelsize=32, rotation=45)
+ax.tick_params(axis="y", which="major", labelsize=32)
+ax.grid(axis="y")
+ax.set_ylim([0, 100])
+ax.set(xlabel="road type (highway)", ylabel="absolute percentage error (MeTS-10 vs. Uber) [%]                 ")
+plt.savefig(f"{CITY.title()}_Uber_ape_size.pdf")
+# -
+
+ut_merged[[simplified_filter(hw) for hw in ut_merged["highway"]]].groupby(["size"]).mean()["ape"]
+
+ut_merged[[simplified_filter(hw) for hw in ut_merged["highway"]]].groupby(["size"]).median()["ape"]
+
+
+# ## complex road segments
+
+df_cell_mapping = pd.read_parquet(TBASEPATH / "road_graph" / CITY / "road_graph_intersecting_cells.parquet")
+df_cell_mapping["intersecting_cells"] = [ast.literal_eval(c) for c in df_cell_mapping["intersecting_cells"]]
+df_cell_mapping.columns
+
+# cell mapping contains the whole road graph, not only box... therefore, the zeros!
+sns.histplot([len(ics) for ics in df_cell_mapping["intersecting_cells"]], discrete=True)
+
+hashy = defaultdict(lambda: set())
+for u, v, gkey, ic in zip(df_cell_mapping["u"], df_cell_mapping["v"], df_cell_mapping["gkey"], df_cell_mapping["intersecting_cells"]):
+    #     print((u,v,gkey,ic))
+    for c in ic:
+        hashy[c[:3]].add((u, v, gkey))
+#         print(c[:3])
+
+num_segments = []
+for cell, segments in hashy.items():
+    #     print(cell)
+    #     print(segments)
+    #     print(len(segments))
+    num_segments.append(len(segments))
+#     raise
+sns.histplot(num_segments, discrete=True)
+
+df_cell_mapping["complex"] = [
+    np.max([len(hashy[c[:3]]) for c in intersecting_cells], initial=0) for intersecting_cells in df_cell_mapping["intersecting_cells"]
+]
+df_cell_mapping
+
+df_cell_mapping["is_complex"] = df_cell_mapping["complex"] >= 5
+
+sns.histplot(df_cell_mapping, x="complex", discrete=True)
+
+ut_merged = ut_merged.merge(df_cell_mapping, on=["u", "v", "gkey"], suffixes=["", "_cell_mapping"])
+ut_merged.columns
+
+sns.histplot(ut_merged.groupby(["u", "v", "gkey"]).first().reset_index(), x="complex", discrete=True)
+
+ut_merged.groupby(["u", "v", "gkey"]).first().reset_index()
+
+road_counts = (
+    ut_merged.groupby(["u", "v", "gkey"])
+    .first()
+    .reset_index()
+    .groupby("highway")
+    .agg(count=("gkey", "count"), sort_key=("sort_key", "first"))
+    .reset_index()
+    .sort_values("sort_key")
+)
+road_counts
+
+road_counts_complex_non_complex = (
+    ut_merged.groupby(["u", "v", "gkey"])
+    .first()
+    .reset_index()
+    .groupby(["highway", "is_complex"])
+    .agg(count=("gkey", "count"), sort_key=("sort_key", "first"))
+    .reset_index()
+    .sort_values("sort_key")
+)
+road_counts_complex_non_complex
+
+fig, ax = plt.subplots(1, figsize=(20, 12), tight_layout=True)
+sns.barplot(
+    data=road_counts[[simplified_filter(hw) for hw in road_counts["highway"]]],
+    x="highway",
+    y="count",
+    palette=osm_color_palette(),
+    linewidth=1,
+    edgecolor=".5",
+    ax=ax,
+)
+ax.tick_params(axis="x", which="major", labelsize=32, rotation=90)
+ax.tick_params(axis="y", which="major", labelsize=32)
+ax.set_yticks([10 * t for t in range(12)], minor=True)
+ax.tick_params(axis="y", which="minor", labelsize=25)
+ax.grid(axis="y", which="both")
+ax.set(xlabel="road type (highway)", ylabel="number of segments [-]")
+ax.bar_label(container=ax.containers[0], labels=[int(f) for f in ax.containers[0].datavalues], size=20)
+plt.savefig(f"{CITY.title()}_Uber_segment_counts.pdf")
+
+fig, ax = plt.subplots(1, figsize=(20, 12), tight_layout=True)
+sns.barplot(
+    data=road_counts_complex_non_complex[[simplified_filter(hw) for hw in road_counts_complex_non_complex["highway"]]],
+    x="highway",
+    y="count",
+    hue="is_complex",
+    #     palette=osm_color_palette(),
+    linewidth=1,
+    edgecolor=".5",
+    ax=ax,
+)
+ax.tick_params(axis="x", which="major", labelsize=32, rotation=90)
+ax.tick_params(axis="y", which="major", labelsize=32)
+ax.set_yticks([10 * t for t in range(12)], minor=True)
+ax.tick_params(axis="y", which="minor", labelsize=25)
+ax.grid(axis="y", which="both")
+ax.set(xlabel="road type (highway)", ylabel="number of segments [-]")
+ax.bar_label(container=ax.containers[0], labels=[f"{f:.0f}" for f in ax.containers[0].datavalues], size=20)
+ax.bar_label(container=ax.containers[1], labels=[f"{f:.0f}" for f in ax.containers[1].datavalues], size=20)
+plt.savefig(f"{CITY.title()}_Uber_segment_counts_complex_non_complex.pdf")
+
+# ## APE complex vs. non-complex
+
+fig, ax = plt.subplots(1, figsize=(20, 12), tight_layout=True)
+sns.boxplot(
+    ut_merged[(~ut_merged["is_complex"]) & [simplified_filter(hw) for hw in ut_merged["highway"]]],
+    x="highway",
+    y="ape",
+    notch=True,
+    sym="",
+    hue="size",
+    hue_order=["S (<=100m)", "M (>100m,<=500m)", "L (>500m)"],
+    # palette=osm_color_palette(),
+    medianprops={"color": "coral"},
+    # flierprops={"marker": "x"},
+    # boxprops={"facecolor": (.4, .6, .8, .5)},
+    showmeans=True,
+    meanprops={"marker": "x", "markeredgecolor": "blue", "markersize": "20"},
+    ax=ax,
+)
+ax.tick_params(axis="x", which="major", labelsize=32, rotation=45)
+ax.tick_params(axis="y", which="major", labelsize=32)
+ax.set_yticks([10 * t for t in range(12)], minor=True)
+ax.tick_params(axis="y", which="minor", labelsize=25)
+ax.grid(axis="y", which="both")
+ax.set(xlabel="road type (highway)", ylabel="absolute percentage error (MeTS-10 vs. Uber) [%]                   ")
+ax.set_ylim([0, 100])
+plt.savefig(f"{CITY.title()}_Uber_ape_non_complex.pdf")
+
+# +
+fig, ax = plt.subplots(1, figsize=(20, 12), tight_layout=True)
+sns.boxplot(
+    ut_merged[(ut_merged["is_complex"]) & [simplified_filter(hw) for hw in ut_merged["highway"]]],
+    x="highway",
+    y="ape",
+    notch=True,
+    sym="",
+    hue="size",
+    hue_order=["S (<=100m)", "M (>100m,<=500m)", "L (>500m)"],
+    # palette=osm_color_palette(),
+    medianprops={"color": "coral"},
+    showmeans=True,
+    meanprops={"marker": "x", "markeredgecolor": "blue", "markersize": "20"},
+    ax=ax,
+)
+
+ax.tick_params(axis="x", which="major", labelsize=32, rotation=45)
+ax.tick_params(axis="y", which="major", labelsize=32)
+ax.set_yticks([10 * t for t in range(12)], minor=True)
+ax.tick_params(axis="y", which="minor", labelsize=25)
+ax.grid(axis="y", which="both")
+ax.set(xlabel="road type (highway)", ylabel="absolute percentage error (MeTS-10 vs. Uber) [%]                   ")
+ax.set_ylim([0, 100])
+plt.savefig(f"{CITY.title()}_Uber_ape_complex.pdf")
+# -
+
+ut_merged[~ut_merged["is_complex"]].groupby(["highway", "size"]).mean()["ape"]
+
+ut_merged[ut_merged["is_complex"]].groupby(["highway", "size"]).mean()["ape"]
+
+
 def plot_dayline(u, v, day):
     fig, ax = plt.subplots(1, figsize=(10, 5), tight_layout=True, sharex=True, sharey=True)
     ax2 = ax.twinx()
@@ -391,6 +655,8 @@ find_edges(345, 262)
 # 29785111_29785113_61737905
 u = 29785111
 v = 29785113
+
+uspeeds_df[(uspeeds_df["u"] == u) & (uspeeds_df["v"] == v) & (uspeeds_df["day"] == 1)]
 
 plot_dayline(u=u, v=v, day=1)
 

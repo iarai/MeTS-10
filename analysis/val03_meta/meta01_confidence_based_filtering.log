@@ -1,0 +1,73 @@
+/iarai/public/t4c/data_pipeline/release20221026_residential_unclassified_no_trust_filtering/speed_classes/madrid/speed_classes_2021-07-16.parquet
+total number of speed labels: 5711248
+ratio filtered: 0.20
+ratio filtered: 0.11
+ratio filtered: 0.10
+filtered yellow or red
+           highway  absolute  relative
+0         motorway      1595  0.013956
+1    motorway_link      2614  0.011050
+2          primary     61771  0.132760
+3     primary_link      1650  0.045832
+4      residential    911527  0.284812
+5        secondary     52100  0.124701
+6   secondary_link      1471  0.089325
+7         tertiary    106909  0.118437
+8    tertiary_link      1590  0.079623
+9            trunk      5535  0.071719
+10      trunk_link       673  0.022821
+11    unclassified     22300  0.114300
+filtered yellow
+           highway  absolute  relative
+0         motorway      1155  0.010106
+1    motorway_link      1985  0.008391
+2          primary     22853  0.049116
+3     primary_link      1144  0.031777
+4      residential    464109  0.145013
+5        secondary     34928  0.083600
+6   secondary_link       928  0.056352
+7         tertiary     66901  0.074115
+8    tertiary_link      1051  0.052632
+9            trunk      4281  0.055471
+10      trunk_link       534  0.018108
+11    unclassified     14917  0.076458
+filtered red
+           highway  absolute  relative
+0         motorway       440  0.003850
+1    motorway_link       629  0.002659
+2          primary     38918  0.083644
+3     primary_link       506  0.014055
+4      residential    447418  0.139798
+5        secondary     17172  0.041101
+6   secondary_link       543  0.032973
+7         tertiary     40008  0.044322
+8    tertiary_link       539  0.026992
+9            trunk      1254  0.016249
+10      trunk_link       139  0.004713
+11    unclassified      7383  0.037842
+filtered yellow or red
+     h  absolute  relative
+0    0     43097  0.036843
+1    1     38111  0.032581
+2    2     32879  0.028108
+3    3     29861  0.025528
+4    4     28651  0.024494
+5    5     31061  0.026554
+6    6     38690  0.033076
+7    7     50125  0.042852
+8    8     57197  0.048897
+9    9     60680  0.051875
+10  10     59377  0.050761
+11  11     60500  0.051721
+12  12     59510  0.050875
+13  13     58388  0.049916
+14  14     56474  0.048279
+15  15     55240  0.047224
+16  16     57080  0.048797
+17  17     54936  0.046964
+18  18     53939  0.046112
+19  19     52302  0.044713
+20  20     49443  0.042269
+21  21     48696  0.041630
+22  22     46471  0.039728
+23  23     47027  0.040203

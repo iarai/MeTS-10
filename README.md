@@ -33,6 +33,20 @@ python data_pipeline/dp01_movie_aggregation.py --help
 
 ## Setup
 [Jupytext](https://jupytext.readthedocs.io/en/latest/install.html)
+Generate a Jupyter config, if you don’t have one yet, with ```jupyter notebook --generate-config```
+edit ```.jupyter/jupyter_notebook_config.py``` and append the following:
+```
+c.NotebookApp.contents_manager_class="jupytext.TextFileContentsManager"
+c.ContentsManager.default_jupytext_formats = ".ipynb,_nb.py"
+```
+and restart Jupyter, i.e. run
+```
+jupyter notebook
+```
+Note: ```.jupyter``` is mostly present in your home directory.
+
+See also [this](https://towardsdatascience.com/version-control-with-jupyter-notebooks-f096f4d7035a) post.
+
 
 ## Contribution conventions
 
@@ -62,3 +76,4 @@ Please cite this repo along with the pre-print:
   copyright = {arXiv.org perpetual, non-exclusive license}
 }
 ```
+[Supplementar Material (revision 2023-04-20)](SupplementaryMaterial.pdf)

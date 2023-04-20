@@ -4,10 +4,12 @@ channels:
   - conda-forge
 dependencies:
   - pip
+  - python=3.10
   - pip:
       #====================================================
       # (1) DEPENDENCIES
       #====================================================
+      - pandas==1.5.3
       - pyarrow
       - h5py
       - shapely
@@ -23,6 +25,7 @@ dependencies:
       - seaborn==0.12.1
       - folium
       - boto3
+      - humanize
 
       #====================================================
       # (2) LOCAL DEV + CI DEPENDENCIES
