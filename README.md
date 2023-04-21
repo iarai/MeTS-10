@@ -63,7 +63,7 @@ See https://blog.mphomphego.co.za/blog/2019/10/03/Why-you-need-to-stop-using-Git
 In order to temporarily skip running `pre-commit`, run `git commit -n`.
 
 ## Cite
-Please cite this repo along with the pre-print:
+Please cite this repo along with the [pre-print](https://arxiv.org/abs/2302.08761):
 ```
 @misc{https://doi.org/10.48550/arxiv.2302.08761,
   doi = {10.48550/ARXIV.2302.08761},
@@ -76,4 +76,4 @@ Please cite this repo along with the pre-print:
   copyright = {arXiv.org perpetual, non-exclusive license}
 }
 ```
-[Supplementar Material (revision 2023-04-20)](SupplementaryMaterial.pdf)
+[Supplementary Material (revision 2023-04-20)](SupplementaryMaterial.pdf)
